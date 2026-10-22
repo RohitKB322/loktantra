@@ -1,0 +1,17 @@
+{
+  "name": "Loktantra: The Indian Election Simulator",
+  "short_name": "Loktantra",
+  "description": "Deep turn-based Indian Political & Election Simulation Game",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#ff9933",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f172a' stroke='%23ff9933' stroke-width='4'/><circle cx='50' cy='50' r='18' fill='none' stroke='%23000080' stroke-width='3'/><path d='M50 32 L50 68 M32 50 L68 50 M37 37 L63 63 M37 63 L63 37' stroke='%23000080' stroke-width='2'/><text x='50' y='88' font-size='12' font-family='sans-serif' fill='%23138808' text-anchor='middle' font-weight='bold'>LOKTANTRA</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
