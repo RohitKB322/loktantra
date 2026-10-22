@@ -327,6 +327,15 @@ export const financeEngine = {
   // 1. Appoint Compliant ED Director (Transfer Investigative Chief)
   appointCompliantEDDirector() {
     const player = gameState.getPlayer();
+    const isPM = !!(gameState.governance && gameState.governance.role === "PRIME_MINISTER");
+
+    if (!isPM) {
+      return { 
+        success: false, 
+        message: "🔒 Action locked! The NDA holds power at the Centre. Only the ruling Prime Minister has the executive constitutional authority to transfer central investigative agency directors. Win the General Election first!" 
+      };
+    }
+
     const cost = 25; // Lakhs White
 
     if (player.whiteMoney < cost) {

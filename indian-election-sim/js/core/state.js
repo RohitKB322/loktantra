@@ -71,11 +71,14 @@ class GameStateStore {
       active: false,
       termWeek: 1,
       role: "OPPOSITION", // "PRIME_MINISTER", "DEPUTY_PM", "OPPOSITION"
-      allianceName: "National Alliance",
+      rulingPartyKey: "NDA",
+      rulingAllianceName: "National Democratic Alliance (NDA)",
+      rulingLeader: "NDA Incumbent Prime Minister",
+      rulingSeats: 303,
       allies: [],
-      governingSeats: 0,
+      governingSeats: 303,
       stability: 85, // 0 - 100%
-      passedBills: 0
+      passedBills: 3
     };
 
     // Parties List: Player + Clone of AI Parties

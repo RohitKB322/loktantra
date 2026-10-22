@@ -103,8 +103,20 @@ export const PARLIAMENTARY_BILLS = [
 ];
 
 export const governanceEngine = {
-  // Execute a National Policy Directive
+  // Check if player is currently Prime Minister
+  isPlayerPM() {
+    return !!(gameState.governance && gameState.governance.role === "PRIME_MINISTER");
+  },
+
+  // Execute a National Policy Directive (PM Executive Prerogative)
   executePolicy(policyId) {
+    if (!this.isPlayerPM()) {
+      return { 
+        success: false, 
+        message: "🔒 Executive action restricted! The NDA currently holds power at the Centre. Win 272 seats or forge a governing coalition after the General Election to take oath as Prime Minister!" 
+      };
+    }
+
     const player = gameState.getPlayer();
     const policy = NATIONAL_POLICIES.find(p => p.id === policyId);
     if (!policy) return { success: false, message: "Policy directive not found." };
@@ -162,8 +174,15 @@ export const governanceEngine = {
     };
   },
 
-  // Adjust RBI Policy Repo Rate
+  // Adjust RBI Policy Repo Rate (PM & Finance Ministry Directive)
   adjustRepoRate(action) {
+    if (!this.isPlayerPM()) {
+      return { 
+        success: false, 
+        message: "🔒 Monetary policy directives are set by the ruling Union Cabinet. Win the General Election to direct the Reserve Bank of India!" 
+      };
+    }
+
     const m = gameState.macro;
     const player = gameState.getPlayer();
 
@@ -196,8 +215,15 @@ export const governanceEngine = {
     }
   },
 
-  // Table & Pass a Parliamentary Bill in Lok Sabha
+  // Table & Pass a Parliamentary Bill in Lok Sabha (Ruling Government)
   tableParliamentaryBill(billId) {
+    if (!this.isPlayerPM()) {
+      return { 
+        success: false, 
+        message: "🔒 Government bills can only be introduced by the ruling Union Cabinet. Opposition parties cannot pass government legislation without a parliamentary majority!" 
+      };
+    }
+
     const bill = PARLIAMENTARY_BILLS.find(b => b.id === billId);
     const gov = gameState.governance || { governingSeats: 272, stability: 80 };
     const player = gameState.getPlayer();
@@ -230,6 +256,129 @@ export const governanceEngine = {
     return {
       success: true,
       message: `Passed "${bill.title}" in Parliament!\n\n• Public Approval: +${bill.rewardApproval}%\n• Coalition Stability: ${gov.stability}%\n• Next Election Vote Swing: +1.2% nationwide`
+    };
+  },
+
+  // ==========================================
+  // OPPOSITION ACCOUNTABILITY ACTIONS (WHEN NDA IS IN POWER)
+  // ==========================================
+
+  // 1. Corner Ruling NDA on Inflation & High Food Prices
+  grillIncumbentOnInflation() {
+    const player = gameState.getPlayer();
+    const cost = 8;
+    if (player.whiteMoney < cost) return { success: false, message: `Insufficient White Money. Media briefing campaign costs ₹${cost}L.` };
+
+    player.whiteMoney -= cost;
+    const m = gameState.macro;
+    const gain = m.inflation > 5.0 ? 3.0 : 1.5;
+    player.nationalApproval = Math.min(90, player.nationalApproval + gain);
+
+    // Reduce NDA baseline across key battleground states
+    gameState.states.forEach(st => {
+      gameState.applyPersistentVoteShift(st.id, null, 1.4, -1.0, 0, 0);
+    });
+
+    audioEngine.playDebateBell();
+    gameState.addBreakingNews(
+      `Inflation Blitz: ${player.name} corners ruling NDA on skyrocketing food & cooking gas prices; public approval surges by +${gain}%`,
+      "Bharat TV",
+      "OPPOSITION"
+    );
+
+    mapEngine.recalculateAllProjections();
+    gameState.notify("GOVERNANCE_UPDATED");
+    return {
+      success: true,
+      message: `Held national press conference grilling NDA on high inflation (${m.inflation}%)! Public approval +${gain}%, NDA vote share reduced across swing states.`
+    };
+  },
+
+  // 2. Champion Agrarian Distress & Demand Legal MSP
+  championFarmerMSPProtest() {
+    const player = gameState.getPlayer();
+    const cost = 12;
+    if (player.whiteMoney < cost) return { success: false, message: `Insufficient White Money. Kisan tractor march organization costs ₹${cost}L.` };
+
+    player.whiteMoney -= cost;
+    player.nationalApproval = Math.min(90, player.nationalApproval + 2.8);
+
+    // Shift agrarian states heavily
+    ["UP", "MH", "PB", "MP", "BI"].forEach(stId => {
+      gameState.applyPersistentVoteShift(stId, null, 2.8, -1.5, 0, 0);
+    });
+
+    audioEngine.playFanfare();
+    gameState.addBreakingNews(
+      `Kisan Aakrosh: ${player.name} organizes mega farmer tractor march demanding legal MSP guarantee from the NDA Union Government`,
+      "Janata Awaaz",
+      "AGRARIAN"
+    );
+
+    mapEngine.recalculateAllProjections();
+    gameState.notify("GOVERNANCE_UPDATED");
+    return {
+      success: true,
+      message: `Mobilized nationwide agrarian support! High anti-incumbency generated across rural Hindi heartland & Punjab (+2.8% swing for next election).`
+    };
+  },
+
+  // 3. Move Adjournment Motion on Youth Unemployment & Paper Leaks
+  moveAdjournmentOnUnemployment() {
+    const player = gameState.getPlayer();
+    const cost = 6;
+    if (player.whiteMoney < cost) return { success: false, message: `Insufficient White Money. Parliamentary research & whip costs ₹${cost}L.` };
+
+    player.whiteMoney -= cost;
+    player.cadreMorale = Math.min(100, player.cadreMorale + 16);
+    player.nationalApproval = Math.min(90, player.nationalApproval + 2.0);
+
+    // Shift youth votes
+    gameState.states.forEach(st => {
+      gameState.applyPersistentVoteShift(st.id, null, 1.8, -0.8, 0, 0);
+    });
+
+    audioEngine.playDebateBell();
+    gameState.addBreakingNews(
+      `Parliament Uproar: ${player.name} moves adjournment motion over student exam paper leaks; NDA treasury benches put on backfoot`,
+      "Digital Wire",
+      "YOUTH"
+    );
+
+    mapEngine.recalculateAllProjections();
+    gameState.notify("GOVERNANCE_UPDATED");
+    return {
+      success: true,
+      message: `Grilled ruling government on youth unemployment (${gameState.macro.unemployment}%) and recruitment delays! Cadre morale +16%, approval +2.0%.`
+    };
+  },
+
+  // 4. Expose Corporate Cronyism & Demand Joint Parliamentary Committee (JPC)
+  demandJPCProbeIntoScandals() {
+    const player = gameState.getPlayer();
+    const cost = 10;
+    if (player.whiteMoney < cost) return { success: false, message: `Insufficient White Money. Legal docket & whitepaper costs ₹${cost}L.` };
+
+    player.whiteMoney -= cost;
+    const bvp = gameState.getParty("BVP");
+    if (bvp) bvp.baseNationalShare = Math.max(15, bvp.baseNationalShare - 0.8);
+
+    gameState.states.forEach(st => {
+      gameState.applyPersistentVoteShift(st.id, null, 1.2, -1.2, 0, 0);
+    });
+
+    audioEngine.playSiren();
+    gameState.addBreakingNews(
+      `Mega Dossier: ${player.name} releases whitepaper detailing incumbent corporate favoritism; demands immediate JPC inquiry`,
+      "Digital Wire",
+      "SCANDAL"
+    );
+
+    mapEngine.recalculateAllProjections();
+    gameState.notify("GOVERNANCE_UPDATED");
+    return {
+      success: true,
+      message: `Released investigative whitepaper! Weakened ruling NDA credibility across contested urban corridors.`
     };
   },
 

@@ -99,6 +99,8 @@ class LoktantraApp {
     // Desktop Tab Nav buttons
     const desktopContainer = document.getElementById("desktop-tab-nav");
     if (desktopContainer) {
+      const isPM = !!(gameState.governance && gameState.governance.role === "PRIME_MINISTER");
+
       desktopContainer.innerHTML = `
         <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'map' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="map">
           🗺️ War Room
@@ -116,9 +118,14 @@ class LoktantraApp {
           🏛️ Party HQ
         </button>
         <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'pmo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="pmo">
-          🇮🇳 PMO India
+          ${isPM ? '🇮🇳 PMO India' : '🏛️ Union Gov (NDA)'}
         </button>
       `;
+
+      const mobilePmoSpan = document.querySelector("#mobile-nav-pmo span");
+      if (mobilePmoSpan) {
+        mobilePmoSpan.textContent = isPM ? "PMO India" : "Union Gov";
+      }
 
       desktopContainer.querySelectorAll(".desktop-nav-btn").forEach(btn => {
         btn.addEventListener("click", () => {
