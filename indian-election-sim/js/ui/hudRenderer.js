@@ -3,6 +3,7 @@ import { gameState } from "../core/state.js";
 import { turnEngine } from "../core/turnEngine.js";
 import { startScreen } from "./startScreen.js";
 import { audioEngine } from "../engines/audioEngine.js";
+import { horseTradingUI } from "./horseTradingUI.js";
 
 export const hudRenderer = {
   render() {
@@ -35,16 +36,36 @@ export const hudRenderer = {
           <div>
             <div class="flex items-center gap-2">
               <span class="font-bold text-xs sm:text-sm text-white">${player.name}</span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                ${player.nationalApproval}% Appr
-              </span>
+              ${gameState.gameStage === "GOVERNANCE" && gameState.governance ? `
+                <span class="text-[10px] px-2 py-0.5 rounded font-black font-mono uppercase tracking-wider ${
+                  gameState.governance.role === 'PRIME_MINISTER' 
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' 
+                    : gameState.governance.role === 'DEPUTY_PM'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                    : 'bg-slate-800 text-slate-300 border border-slate-700'
+                }">
+                  ${gameState.governance.role === 'PRIME_MINISTER' ? '🇮🇳 Prime Minister' : gameState.governance.role === 'DEPUTY_PM' ? '🏛️ Deputy PM' : '⚖️ Opposition'}
+                </span>
+              ` : `
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                  ${player.nationalApproval}% Appr
+                </span>
+              `}
             </div>
             <div class="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
-              <span class="text-amber-400 font-semibold">Week ${gameState.currentTurn} / ${gameState.totalTurns}</span>
-              <span>•</span>
-              <span class="${weeksRemaining <= 4 ? 'text-rose-400 font-bold animate-pulse' : 'text-slate-400'}">
-                ${weeksRemaining > 0 ? `${weeksRemaining} wks to Polls` : 'Election Day!'}
-              </span>
+              ${gameState.gameStage === "GOVERNANCE" && gameState.governance ? `
+                <span class="text-amber-400 font-semibold">Term 1 • Week ${gameState.governance.termWeek}</span>
+                <span>•</span>
+                <span class="text-emerald-400 font-bold">${gameState.governance.governingSeats}/272 Seats (${gameState.governance.stability}% Stability)</span>
+              ` : gameState.gameStage === "COUNTING" || gameState.gameStage === "POST_POLL" ? `
+                <span class="text-rose-400 font-bold animate-pulse">Polls Closed • Resort Politics Active</span>
+              ` : `
+                <span class="text-amber-400 font-semibold">Week ${gameState.currentTurn} / ${gameState.totalTurns}</span>
+                <span>•</span>
+                <span class="${weeksRemaining <= 4 ? 'text-rose-400 font-bold animate-pulse' : 'text-slate-400'}">
+                  ${weeksRemaining > 0 ? `${weeksRemaining} wks to Polls` : 'Election Day!'}
+                </span>
+              `}
             </div>
           </div>
         </div>
@@ -103,10 +124,17 @@ export const hudRenderer = {
           </button>
 
           <!-- Turn Advancement Button -->
-          <button id="btn-next-turn" class="btn-primary px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
-            <span>Advance Week</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
-          </button>
+          ${gameState.gameStage === "COUNTING" || gameState.gameStage === "POST_POLL" ? `
+            <button id="btn-open-resort-politics" class="btn-primary px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg border border-amber-400">
+              <span>🏨 Resort Politics</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+            </button>
+          ` : `
+            <button id="btn-next-turn" class="btn-primary px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
+              <span>${gameState.gameStage === "GOVERNANCE" ? 'Govern Week 🏛️' : 'Advance Week'}</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+            </button>
+          `}
         </div>
 
       </div>
@@ -116,6 +144,12 @@ export const hudRenderer = {
   },
 
   bindEvents() {
+    const btnResort = document.getElementById("btn-open-resort-politics");
+    if (btnResort) {
+      btnResort.addEventListener("click", () => {
+        horseTradingUI.open();
+      });
+    }
     const btnNext = document.getElementById("btn-next-turn");
     if (btnNext) {
       btnNext.addEventListener("click", () => {

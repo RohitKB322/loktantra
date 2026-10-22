@@ -11,6 +11,7 @@ import { startScreen } from "./ui/startScreen.js";
 import { mapEngine } from "./engines/mapEngine.js";
 import { audioEngine } from "./engines/audioEngine.js";
 import { gameModal } from "./ui/gameModal.js";
+import { horseTradingUI } from "./ui/horseTradingUI.js";
 
 class LoktantraApp {
   constructor() {
@@ -315,19 +316,30 @@ class LoktantraApp {
             </div>
           </div>
 
-          <!-- Buttons -->
+          <!-- Post-Poll Action Buttons -->
           <div class="flex flex-col sm:flex-row gap-3">
-            <button id="btn-restart-campaign" class="flex-1 btn-primary py-3 rounded-xl font-bold text-sm tracking-wide uppercase">
-              Start New Campaign
+            <button id="btn-enter-resort-politics" class="flex-1 btn-primary py-3 rounded-xl font-black text-sm tracking-wide uppercase flex items-center justify-center gap-2 shadow-xl border border-amber-400">
+              <span>🏨 Enter Resort Politics & MLA Auction (3 Rounds)</span>
             </button>
-            <button id="btn-close-results" class="flex-1 btn-secondary py-3 rounded-xl font-bold text-sm text-slate-300">
-              Inspect Final Map
+            <button id="btn-close-results" class="sm:w-36 btn-secondary py-3 rounded-xl font-bold text-xs text-slate-300">
+              Inspect Map
+            </button>
+            <button id="btn-restart-campaign" class="sm:w-36 btn-secondary py-3 rounded-xl font-bold text-xs text-rose-400 hover:text-rose-300">
+              New Campaign
             </button>
           </div>
 
         </div>
       </div>
     `;
+
+    const btnResort = document.getElementById("btn-enter-resort-politics");
+    if (btnResort) {
+      btnResort.addEventListener("click", () => {
+        modalContainer.innerHTML = "";
+        horseTradingUI.open();
+      });
+    }
 
     document.getElementById("btn-restart-campaign").addEventListener("click", () => {
       modalContainer.innerHTML = "";

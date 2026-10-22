@@ -21,7 +21,9 @@ export const saveManager = {
       newsLog: gameState.newsLog,
       nationalSeatTally: gameState.nationalSeatTally,
       selectedStateId: gameState.selectedStateId,
-      selectedDistrictId: gameState.selectedDistrictId
+      selectedDistrictId: gameState.selectedDistrictId,
+      postPoll: gameState.postPoll,
+      governance: gameState.governance
     });
   },
 
@@ -45,6 +47,8 @@ export const saveManager = {
       gameState.nationalSeatTally = data.nationalSeatTally || gameState.nationalSeatTally;
       gameState.selectedStateId = data.selectedStateId || "UP";
       gameState.selectedDistrictId = data.selectedDistrictId || "varanasi";
+      gameState.postPoll = data.postPoll || gameState.postPoll;
+      gameState.governance = data.governance || gameState.governance;
 
       gameState.notify("STATE_LOADED");
       return { success: true };

@@ -49,6 +49,31 @@ class GameStateStore {
     // Active Crisis Dilemma popup
     this.activeDilemma = null;
 
+    // Post-Election Resort Politics, MLA Trading & Governance (Version 0.4)
+    this.postPoll = {
+      round: 1,
+      maxRounds: 3,
+      tradingComplete: false,
+      seats: { PLAYER: 0, NDA: 0, INDIA: 0, OTHERS: 0 },
+      resortQuarantined: false,
+      resortLocation: null,
+      playerPoachedThisRound: false,
+      rivalDefendedThisRound: false,
+      currentRivalBid: null,
+      history: []
+    };
+
+    this.governance = {
+      active: false,
+      termWeek: 1,
+      role: "OPPOSITION", // "PRIME_MINISTER", "DEPUTY_PM", "OPPOSITION"
+      allianceName: "National Alliance",
+      allies: [],
+      governingSeats: 0,
+      stability: 85, // 0 - 100%
+      passedBills: 0
+    };
+
     // Parties List: Player + Clone of AI Parties
     this.parties = [
       this.player,
