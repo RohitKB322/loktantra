@@ -21,6 +21,7 @@ export const horseTradingEngine = {
       resortLocation: null,
       playerPoachedThisRound: false,
       rivalDefendedThisRound: false,
+      selectedDefenseAction: null,
       currentRivalBid: null,
       history: []
     };
@@ -196,6 +197,8 @@ export const horseTradingEngine = {
       return { success: false, message: "You have already defended against the rival bid for this round." };
     }
 
+    pp.selectedDefenseAction = action;
+
     if (action === "resort_quarantine") {
       // 5-Star Resort Lockdown: ₹25L White Money. 100% blocks poaching!
       const cost = 25;
@@ -339,6 +342,7 @@ export const horseTradingEngine = {
       pp.round++;
       pp.playerPoachedThisRound = false;
       pp.rivalDefendedThisRound = false;
+      pp.selectedDefenseAction = null;
       pp.resortQuarantined = false;
       this.generateRivalBidForCurrentRound();
       audioEngine.playBreakingNews();

@@ -39,6 +39,20 @@ export const horseTradingUI = {
     const playerSeats = seats.PLAYER;
     const majority = 272;
 
+    // Ensure selected cash is clamped reasonably
+    if (this.selectedCashLakhs > player.blackMoney && player.blackMoney > 0) {
+      this.selectedCashLakhs = player.blackMoney;
+    }
+
+    const portfolioOptions = [
+      { value: "Cabinet Ministry: Civil Aviation & Tourism", label: "✈️ Ministry of Civil Aviation & Tourism" },
+      { value: "Cabinet Ministry: Railways & Infrastructure", label: "🚆 Ministry of Railways & Heavy Transport" },
+      { value: "Cabinet Ministry: Agriculture & Farmer MSP", label: "🌾 Ministry of Agriculture & Rural MSP" },
+      { value: "Minister of State (MoS) for Home Affairs", label: "🏛️ Minister of State (MoS) for Home Affairs" },
+      { value: "Deputy Speaker of Lok Sabha", label: "⚖️ Deputy Speaker of Lok Sabha" },
+      { value: "₹10,000 Cr Special State Development Quota", label: "🏗️ ₹10,000 Cr Special State Development Quota" }
+    ];
+
     container.innerHTML = `
       <div class="fixed inset-0 z-[260] flex items-center justify-center p-2 sm:p-4 bg-slate-950/95 backdrop-blur-xl overflow-y-auto animate-fade-in">
         <div class="modal-content w-full max-w-5xl p-4 sm:p-6 my-auto border-2 border-amber-500/60 shadow-2xl rounded-2xl relative bg-slate-900/95">
@@ -80,7 +94,7 @@ export const horseTradingUI = {
                 <span>Parliament Standings (543 Seats)</span>
                 <span class="text-[10px] text-amber-400 font-normal">• 272 to Rule India</span>
               </span>
-              <span class="text-amber-400">Your Camp: ${playerSeats} MPs</span>
+              <span class="text-amber-400 font-bold">Your Camp: ${playerSeats} MPs</span>
             </div>
 
             <!-- Multi-party visual progress bar -->
@@ -111,60 +125,78 @@ export const horseTradingUI = {
                   <h3 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                     <span>🎯</span> Poach Rival Factions
                   </h3>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                    ${pp.playerPoachedThisRound ? 'Bid Dispatched' : 'Active Bid Ready'}
+                  <span class="text-[10px] px-2 py-0.5 rounded font-mono ${pp.playerPoachedThisRound ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-300'}">
+                    ${pp.playerPoachedThisRound ? '✓ Bid Dispatched' : 'Active Bid Ready'}
                   </span>
                 </div>
 
-                <!-- Target Faction Radio Pills -->
+                <!-- Target Faction Selectable Cards -->
                 <div class="grid grid-cols-1 gap-2 my-2.5">
-                  ${targets.map(t => `
-                    <label class="p-2.5 rounded-xl border ${this.selectedTargetId === t.id ? 'border-amber-400 bg-amber-500/10' : 'border-slate-800 bg-slate-900/60'} cursor-pointer hover:border-slate-600 transition-all flex items-start justify-between">
-                      <div class="flex items-start gap-2">
-                        <input type="radio" name="auctionTarget" value="${t.id}" ${this.selectedTargetId === t.id ? 'checked' : ''} class="mt-1 target-radio">
-                        <div>
-                          <div class="text-xs font-bold text-white">${t.name}</div>
-                          <div class="text-[10px] text-slate-400 mt-0.5">${t.description}</div>
-                          <div class="text-[10px] text-amber-400 font-mono mt-1">Available: ~${t.availableSeats} MPs • ${t.risk}</div>
+                  ${targets.map(t => {
+                    const isSelected = this.selectedTargetId === t.id;
+                    return `
+                      <div class="p-3 rounded-xl border cursor-pointer transition-all flex items-start justify-between target-card ${
+                        isSelected 
+                          ? 'border-amber-400 bg-amber-500/15 ring-1 ring-amber-400/60 shadow-lg' 
+                          : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                      }" data-target-id="${t.id}">
+                        <div class="flex items-start gap-2.5">
+                          <input type="radio" name="auctionTargetRadio" value="${t.id}" ${isSelected ? 'checked' : ''} class="mt-1 target-radio pointer-events-none">
+                          <div>
+                            <div class="text-xs font-bold ${isSelected ? 'text-amber-400 font-black' : 'text-white'} flex items-center gap-1.5">
+                              <span>${t.name}</span>
+                              ${isSelected ? '<span class="text-[9px] bg-amber-500/30 text-amber-300 px-1.5 py-0.2 rounded">SELECTED</span>' : ''}
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-0.5 leading-tight">${t.description}</div>
+                            <div class="text-[10px] text-amber-400/90 font-mono mt-1">Available: ~${t.availableSeats} MPs • ${t.risk}</div>
+                          </div>
                         </div>
+                        <span class="text-xs font-mono font-bold text-emerald-400 shrink-0">₹${t.minSlushCash}L+</span>
                       </div>
-                      <span class="text-xs font-mono font-bold text-emerald-400">₹${t.minSlushCash}L+</span>
-                    </label>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </div>
 
-                <!-- Slush Cash Input -->
+                <!-- Slush Cash Input & Quick Presets -->
                 <div class="mt-3">
-                  <label class="text-[11px] font-bold text-slate-300 flex justify-between">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-slate-300">
                     <span>Suitcase Slush Funds (Black Money)</span>
-                    <span class="text-amber-400 font-mono font-bold" id="cash-label">₹${this.selectedCashLakhs} Lakhs</span>
-                  </label>
-                  <input type="range" id="input-bid-cash" min="20" max="${Math.max(20, player.blackMoney)}" step="5" value="${this.selectedCashLakhs}" 
+                    <span class="text-amber-400 font-mono font-black" id="cash-label">₹${this.selectedCashLakhs} Lakhs</span>
+                  </div>
+                  
+                  <input type="range" id="input-bid-cash" min="10" max="${Math.max(20, player.blackMoney)}" step="5" value="${this.selectedCashLakhs}" 
                     class="w-full accent-amber-500 cursor-pointer mt-1" ${pp.playerPoachedThisRound ? 'disabled' : ''}>
-                  <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-                    <span>₹20L</span>
-                    <span>Max: ₹${player.blackMoney}L</span>
+                  
+                  <!-- Quick Preset Cash Buttons -->
+                  <div class="flex items-center gap-1.5 mt-1.5">
+                    <span class="text-[10px] text-slate-500 font-mono">Quick:</span>
+                    <button type="button" class="btn-preset-cash px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-slate-300" data-cash="25">₹25L</button>
+                    <button type="button" class="btn-preset-cash px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-slate-300" data-cash="50">₹50L</button>
+                    <button type="button" class="btn-preset-cash px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-slate-300" data-cash="75">₹75L</button>
+                    <button type="button" class="btn-preset-cash px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-[10px] font-mono text-amber-300" data-cash="${player.blackMoney}">Max</button>
                   </div>
                 </div>
 
                 <!-- Cabinet Portfolio Sweetener Dropdown -->
                 <div class="mt-3">
-                  <label class="text-[11px] font-bold text-slate-300">Cabinet Portfolio Sweetener (+15% Persuasion)</label>
+                  <label class="text-[11px] font-bold text-slate-300 flex items-center justify-between">
+                    <span>Cabinet Portfolio Sweetener</span>
+                    <span class="text-[10px] text-emerald-400 font-mono">+15% Success Chance</span>
+                  </label>
                   <select id="select-bid-portfolio" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white" ${pp.playerPoachedThisRound ? 'disabled' : ''}>
-                    <option value="Cabinet Ministry: Civil Aviation & Tourism">✈️ Ministry of Civil Aviation & Tourism</option>
-                    <option value="Cabinet Ministry: Railways & Infrastructure">🚆 Ministry of Railways & Heavy Transport</option>
-                    <option value="Cabinet Ministry: Agriculture & Farmer MSP">🌾 Ministry of Agriculture & Rural MSP</option>
-                    <option value="Minister of State (MoS) for Home Affairs">🏛️ Minister of State (MoS) for Home Affairs</option>
-                    <option value="Deputy Speaker of Lok Sabha">⚖️ Deputy Speaker of Lok Sabha</option>
-                    <option value="₹10,000 Cr Special State Development Quota">🏗️ ₹10,000 Cr Special State Development Quota</option>
+                    ${portfolioOptions.map(opt => `
+                      <option value="${opt.value}" ${this.selectedPortfolio === opt.value ? 'selected' : ''}>
+                        ${opt.label}
+                      </option>
+                    `).join('')}
                   </select>
                 </div>
               </div>
 
               <!-- Dispatch Bid Button -->
               <div class="mt-4 pt-3 border-t border-slate-800">
-                <button id="btn-dispatch-bid" class="w-full btn-primary py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 ${pp.playerPoachedThisRound ? 'opacity-50 cursor-not-allowed' : ''}" ${pp.playerPoachedThisRound ? 'disabled' : ''}>
-                  <span>💼 Deliver Suitcases & Dispatch Emissary</span>
+                <button id="btn-dispatch-bid" class="w-full btn-primary py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 ${pp.playerPoachedThisRound ? 'opacity-50 cursor-not-allowed' : ''}">
+                  <span>${pp.playerPoachedThisRound ? '✓ Emissary Dispatched This Round' : '💼 Deliver Suitcases & Dispatch Emissary'}</span>
                 </button>
               </div>
             </div>
@@ -177,15 +209,15 @@ export const horseTradingUI = {
                     <span>🚨</span> Rival Poaching Alert
                   </h3>
                   <span class="text-[10px] px-2 py-0.5 rounded font-mono ${pp.rivalDefendedThisRound ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse'}">
-                    ${pp.rivalDefendedThisRound ? 'Defense Active' : 'Defection Risk'}
+                    ${pp.rivalDefendedThisRound ? '✓ Defense Executed' : '⚠️ Defense Required'}
                   </span>
                 </div>
 
                 <!-- Active Incursion Details Card -->
                 ${rivalBid ? `
-                  <div class="p-3.5 rounded-xl bg-slate-900/90 border border-rose-500/40 mt-2">
+                  <div class="p-3.5 rounded-xl bg-slate-900/90 border ${pp.rivalDefendedThisRound ? 'border-emerald-500/40' : 'border-rose-500/40'} mt-2">
                     <div class="flex items-center justify-between text-xs font-bold text-white">
-                      <span class="text-rose-400 font-mono">${rivalBid.rivalName}</span>
+                      <span class="${pp.rivalDefendedThisRound ? 'text-emerald-400' : 'text-rose-400'} font-mono">${rivalBid.rivalName}</span>
                       <span class="text-amber-400 font-mono">Targeting ${rivalBid.targetSeats} of your MPs</span>
                     </div>
                     <p class="text-xs text-slate-300 mt-2 leading-relaxed">
@@ -204,29 +236,41 @@ export const horseTradingUI = {
                 <div class="mt-3.5 space-y-2">
                   <div class="text-[11px] font-bold text-slate-300">Choose Your Defensive Counter-Measure:</div>
                   
-                  <button class="w-full text-left p-2.5 rounded-xl border border-slate-700 bg-slate-900/80 hover:border-emerald-400 hover:bg-slate-800 transition-all text-xs btn-defend ${pp.rivalDefendedThisRound ? 'opacity-50 cursor-not-allowed' : ''}" 
-                    data-action="resort_quarantine" ${pp.rivalDefendedThisRound ? 'disabled' : ''}>
+                  <button type="button" class="w-full text-left p-2.5 rounded-xl border transition-all text-xs btn-defend ${
+                    pp.selectedDefenseAction === 'resort_quarantine'
+                      ? 'border-emerald-400 bg-emerald-500/20 ring-1 ring-emerald-400'
+                      : 'border-slate-700 bg-slate-900/80 hover:border-emerald-400 hover:bg-slate-800'
+                  } ${pp.rivalDefendedThisRound ? 'opacity-70' : ''}" 
+                    data-action="resort_quarantine">
                     <div class="font-bold text-emerald-400 flex items-center justify-between">
                       <span>🏨 5-Star Resort Lockdown (Bengaluru/Goa)</span>
-                      <span class="font-mono text-[10px]">₹25L White • 100% Safe</span>
+                      <span class="font-mono text-[10px]">${pp.selectedDefenseAction === 'resort_quarantine' ? '★ ACTIVE' : '₹25L White • 100% Safe'}</span>
                     </div>
                     <div class="text-[10px] text-slate-400 mt-0.5">Charter private planes, seize mobile phones, quarantine MLAs behind resort security.</div>
                   </button>
 
-                  <button class="w-full text-left p-2.5 rounded-xl border border-slate-700 bg-slate-900/80 hover:border-amber-400 hover:bg-slate-800 transition-all text-xs btn-defend ${pp.rivalDefendedThisRound ? 'opacity-50 cursor-not-allowed' : ''}" 
-                    data-action="match_cash" ${pp.rivalDefendedThisRound ? 'disabled' : ''}>
+                  <button type="button" class="w-full text-left p-2.5 rounded-xl border transition-all text-xs btn-defend ${
+                    pp.selectedDefenseAction === 'match_cash'
+                      ? 'border-amber-400 bg-amber-500/20 ring-1 ring-amber-400'
+                      : 'border-slate-700 bg-slate-900/80 hover:border-amber-400 hover:bg-slate-800'
+                  } ${pp.rivalDefendedThisRound ? 'opacity-70' : ''}" 
+                    data-action="match_cash">
                     <div class="font-bold text-amber-400 flex items-center justify-between">
                       <span>💼 Match Offer with Party Loyalty Bonuses</span>
-                      <span class="font-mono text-[10px]">~₹30L Slush • 85% Safe</span>
+                      <span class="font-mono text-[10px]">${pp.selectedDefenseAction === 'match_cash' ? '★ ACTIVE' : '~₹30L Slush • 85% Safe'}</span>
                     </div>
                     <div class="text-[10px] text-slate-400 mt-0.5">Disburse emergency suitcase loyalty bonuses directly into MLA accounts.</div>
                   </button>
 
-                  <button class="w-full text-left p-2.5 rounded-xl border border-slate-700 bg-slate-900/80 hover:border-blue-400 hover:bg-slate-800 transition-all text-xs btn-defend ${pp.rivalDefendedThisRound ? 'opacity-50 cursor-not-allowed' : ''}" 
-                    data-action="anti_defection_threat" ${pp.rivalDefendedThisRound ? 'disabled' : ''}>
+                  <button type="button" class="w-full text-left p-2.5 rounded-xl border transition-all text-xs btn-defend ${
+                    pp.selectedDefenseAction === 'anti_defection_threat'
+                      ? 'border-blue-400 bg-blue-500/20 ring-1 ring-blue-400'
+                      : 'border-slate-700 bg-slate-900/80 hover:border-blue-400 hover:bg-slate-800'
+                  } ${pp.rivalDefendedThisRound ? 'opacity-70' : ''}" 
+                    data-action="anti_defection_threat">
                     <div class="font-bold text-blue-400 flex items-center justify-between">
                       <span>📜 Issue 10th Schedule Anti-Defection Whip</span>
-                      <span class="font-mono text-[10px]">Free • 55% Safe</span>
+                      <span class="font-mono text-[10px]">${pp.selectedDefenseAction === 'anti_defection_threat' ? '★ ACTIVE' : 'Free • 55% Safe'}</span>
                     </div>
                     <div class="text-[10px] text-slate-400 mt-0.5">Threaten immediate disqualification through the Speaker of the House.</div>
                   </button>
@@ -236,9 +280,9 @@ export const horseTradingUI = {
               <!-- Round Progression Indicator -->
               <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
                 <span class="text-[11px] text-slate-400 font-mono">
-                  ${pp.rivalDefendedThisRound ? '✓ Defense Executed' : '⚠️ Defense Required'}
+                  ${pp.rivalDefendedThisRound ? '✓ Defense Applied' : '⚠️ Defense Required'}
                 </span>
-                <button id="btn-next-trading-round" class="btn-primary py-2 px-4 rounded-xl font-bold text-xs uppercase tracking-wider">
+                <button type="button" id="btn-next-trading-round" class="btn-primary py-2.5 px-5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg">
                   ${pp.round < 3 ? `Complete Round ${pp.round} →` : `Enter 272 Coalition Summit 🏛️`}
                 </button>
               </div>
@@ -250,10 +294,10 @@ export const horseTradingUI = {
           <div class="mt-4 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
             <div class="text-[10px] uppercase font-bold text-slate-400 font-mono mb-1.5 flex items-center justify-between">
               <span>Midnight Teleprompter & Resort Wire Logs</span>
-              <span class="text-amber-400">Live Wire</span>
+              <span class="text-amber-400 font-mono">LIVE WIRE</span>
             </div>
             <div class="h-16 overflow-y-auto space-y-1 text-[11px] font-mono text-slate-300">
-              ${pp.history.length > 0 ? pp.history.map(h => `
+              ${pp.history && pp.history.length > 0 ? pp.history.map(h => `
                 <div class="flex items-start gap-2">
                   <span class="text-slate-500">[R${h.round} ${h.time}]</span>
                   <span>${h.text}</span>
@@ -272,18 +316,26 @@ export const horseTradingUI = {
   bindEvents(container) {
     const pp = horseTradingEngine.getState();
     const player = gameState.getPlayer();
+    const targets = horseTradingEngine.getAvailableAuctionTargets();
 
-    // Radio target changes
-    container.querySelectorAll(".target-radio").forEach(radio => {
-      radio.addEventListener("change", (e) => {
-        this.selectedTargetId = e.target.value;
-        this.render();
+    // 1. Target Card Click & Selection
+    container.querySelectorAll(".target-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const tid = card.getAttribute("data-target-id");
+        if (tid) {
+          this.selectedTargetId = tid;
+          const t = targets.find(item => item.id === tid);
+          if (t && this.selectedCashLakhs < t.minSlushCash) {
+            this.selectedCashLakhs = t.minSlushCash;
+          }
+          this.render();
+        }
       });
     });
 
-    // Cash slider changes
-    const cashInput = container.getElementById("input-bid-cash");
-    const cashLabel = container.getElementById("cash-label");
+    // 2. Cash Slider Changes
+    const cashInput = document.getElementById("input-bid-cash");
+    const cashLabel = document.getElementById("cash-label");
     if (cashInput && cashLabel) {
       cashInput.addEventListener("input", (e) => {
         this.selectedCashLakhs = parseInt(e.target.value);
@@ -291,18 +343,36 @@ export const horseTradingUI = {
       });
     }
 
-    // Portfolio selection
-    const portfolioSelect = container.getElementById("select-bid-portfolio");
+    // 3. Quick Cash Presets
+    container.querySelectorAll(".btn-preset-cash").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = parseInt(btn.getAttribute("data-cash"));
+        this.selectedCashLakhs = Math.max(10, Math.min(player.blackMoney, val));
+        const cIn = document.getElementById("input-bid-cash");
+        const cLb = document.getElementById("cash-label");
+        if (cIn) cIn.value = this.selectedCashLakhs;
+        if (cLb) cLb.textContent = `₹${this.selectedCashLakhs} Lakhs`;
+      });
+    });
+
+    // 4. Portfolio Selection Dropdown
+    const portfolioSelect = document.getElementById("select-bid-portfolio");
     if (portfolioSelect) {
       portfolioSelect.addEventListener("change", (e) => {
         this.selectedPortfolio = e.target.value;
       });
     }
 
-    // Dispatch Bid Button
-    const btnDispatch = container.getElementById("btn-dispatch-bid");
+    // 5. Dispatch Bid Button
+    const btnDispatch = document.getElementById("btn-dispatch-bid");
     if (btnDispatch) {
       btnDispatch.addEventListener("click", () => {
+        if (pp.playerPoachedThisRound) {
+          gameModal.toast("Emissary already dispatched for this round! Advance to the next round.", "warning");
+          return;
+        }
+
         const res = horseTradingEngine.playerBidOnFaction(
           this.selectedTargetId,
           this.selectedCashLakhs,
@@ -319,7 +389,7 @@ export const horseTradingUI = {
       });
     }
 
-    // Defend Buttons
+    // 6. Defend Buttons
     container.querySelectorAll(".btn-defend").forEach(btn => {
       btn.addEventListener("click", () => {
         const action = btn.getAttribute("data-action");
@@ -335,8 +405,8 @@ export const horseTradingUI = {
       });
     });
 
-    // Next Round Button
-    const btnNext = container.getElementById("btn-next-trading-round");
+    // 7. Complete Round / Next Trading Round Button
+    const btnNext = document.getElementById("btn-next-trading-round");
     if (btnNext) {
       btnNext.addEventListener("click", () => {
         if (!pp.rivalDefendedThisRound && pp.currentRivalBid) {
@@ -346,13 +416,21 @@ export const horseTradingUI = {
             confirmText: "Advance Anyway",
             cancelText: "Set Defense",
             onConfirm: () => {
-              horseTradingEngine.advanceRound();
-              this.render();
+              const res = horseTradingEngine.advanceRound();
+              if (res.complete) {
+                this.renderSummit(container);
+              } else {
+                this.render();
+              }
             }
           });
         } else {
-          horseTradingEngine.advanceRound();
-          this.render();
+          const res = horseTradingEngine.advanceRound();
+          if (res.complete) {
+            this.renderSummit(container);
+          } else {
+            this.render();
+          }
         }
       });
     }
@@ -362,7 +440,6 @@ export const horseTradingUI = {
   renderSummit(container) {
     const coalitionData = horseTradingEngine.getCoalitionOptions();
     const player = gameState.getPlayer();
-    const pp = horseTradingEngine.getState();
     const standings = coalitionData.standings;
     const singleLargest = coalitionData.singleLargest;
     const majority = 272;
@@ -430,7 +507,7 @@ export const horseTradingUI = {
                         </div>
                       </div>
 
-                      <button class="btn-primary py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 btn-seal-coalition"
+                      <button type="button" class="btn-primary py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 btn-seal-coalition"
                         data-alliance-name="${c.name}" data-seats="${c.combinedSeats}" data-role="PRIME_MINISTER" data-allies="${c.allies.join(',')}">
                         Swear In as Prime Minister 🇮🇳
                       </button>
@@ -457,7 +534,7 @@ export const horseTradingUI = {
                 </div>
 
                 <div class="flex gap-3 mt-3">
-                  <button class="btn-primary py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider btn-seal-coalition flex-1"
+                  <button type="button" class="btn-primary py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider btn-seal-coalition flex-1"
                     data-alliance-name="National Unity Front" data-seats="${coalitionData.rivalInviteToPlayer.combinedSeats}" data-role="DEPUTY_PM" data-allies="NDA">
                     Accept & Enter Government as Deputy PM 🏛️
                   </button>
@@ -474,7 +551,7 @@ export const horseTradingUI = {
                     Refuse coalition compromises. Sit as the Leader of Opposition, grill the treasury benches, and launch Floor Tests!
                   </p>
                 </div>
-                <button class="btn-secondary py-2 px-4 rounded-xl text-xs font-bold text-slate-300 hover:text-white shrink-0 btn-seal-coalition"
+                <button type="button" class="btn-secondary py-2 px-4 rounded-xl text-xs font-bold text-slate-300 hover:text-white shrink-0 btn-seal-coalition"
                   data-alliance-name="Governing Coalition" data-seats="${standings[0].seats}" data-role="OPPOSITION" data-allies="">
                   Take Oath as Opposition Leader ⚖️
                 </button>
