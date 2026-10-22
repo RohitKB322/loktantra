@@ -6,8 +6,10 @@ import { tab1_mapUI } from "./ui/tab1_mapUI.js";
 import { tab2_partyUI } from "./ui/tab2_partyUI.js";
 import { tab3_financeUI } from "./ui/tab3_financeUI.js";
 import { tab4_mediaUI } from "./ui/tab4_mediaUI.js";
+import { tab5_partyHQ } from "./ui/tab5_partyHQ.js";
 import { startScreen } from "./ui/startScreen.js";
 import { mapEngine } from "./engines/mapEngine.js";
+import { audioEngine } from "./engines/audioEngine.js";
 
 class LoktantraApp {
   constructor() {
@@ -15,7 +17,7 @@ class LoktantraApp {
   }
 
   init() {
-    console.log("Initializing Loktantra: The Indian Election Simulator...");
+    console.log("Initializing Loktantra: The Indian Election Simulator v0.3...");
 
     // Check if auto-save exists
     if (!saveManager.hasAutoSave()) {
@@ -40,7 +42,7 @@ class LoktantraApp {
       this.handleStateUpdate(state, changeEvent);
     });
 
-    // Keyboard shortcuts (Space = Next turn, 1-4 = Switch Tabs)
+    // Keyboard shortcuts (Space = Next turn, 1-5 = Switch Tabs)
     window.addEventListener("keydown", (e) => {
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
 
@@ -48,6 +50,7 @@ class LoktantraApp {
       if (e.code === "Digit2") this.switchTab("campaign");
       if (e.code === "Digit3") this.switchTab("finance");
       if (e.code === "Digit4") this.switchTab("media");
+      if (e.code === "Digit5") this.switchTab("party-hq");
     });
   }
 
@@ -71,6 +74,9 @@ class LoktantraApp {
       case "media":
         tab4_mediaUI.render();
         break;
+      case "party-hq":
+        tab5_partyHQ.render();
+        break;
     }
   }
 
@@ -88,17 +94,20 @@ class LoktantraApp {
     const desktopContainer = document.getElementById("desktop-tab-nav");
     if (desktopContainer) {
       desktopContainer.innerHTML = `
-        <button class="desktop-nav-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'map' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="map">
+        <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'map' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="map">
           🗺️ War Room
         </button>
-        <button class="desktop-nav-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'campaign' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="campaign">
+        <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'campaign' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="campaign">
           📢 Campaign
         </button>
-        <button class="desktop-nav-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'finance' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="finance">
+        <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'finance' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="finance">
           💰 Treasury
         </button>
-        <button class="desktop-nav-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'media' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="media">
-          📺 Media War
+        <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'media' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="media">
+          📺 Media TV
+        </button>
+        <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'party-hq' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="party-hq">
+          🏛️ Party HQ
         </button>
       `;
 
@@ -133,9 +142,9 @@ class LoktantraApp {
     // Update Desktop Nav styles
     document.querySelectorAll(".desktop-nav-btn").forEach(btn => {
       if (btn.getAttribute("data-tab") === tabName) {
-        btn.className = "desktop-nav-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 transition-all";
+        btn.className = "desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 transition-all";
       } else {
-        btn.className = "desktop-nav-btn px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
+        btn.className = "desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
       }
     });
 
@@ -146,7 +155,7 @@ class LoktantraApp {
   updateBreakingTicker() {
     const ticker = document.getElementById("ticker-text");
     if (ticker && gameState.breakingNews.length > 0) {
-      ticker.textContent = gameState.breakingNews.join("  ★  ");
+      ticker.textContent = gameState.breakingNews.join("    ★    ");
     }
   }
 
@@ -155,10 +164,80 @@ class LoktantraApp {
     this.renderCurrentTab();
     this.updateBreakingTicker();
 
+    // Check if dynamic crisis dilemma triggered
+    if (state.activeDilemma) {
+      this.renderDilemmaModal(state.activeDilemma);
+    }
+
     // Check if Election Day Live Counting
     if (state.gameStage === "COUNTING") {
       this.renderElectionResultsModal();
     }
+  }
+
+  renderDilemmaModal(dilemma) {
+    const container = document.getElementById("dilemma-modal");
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="fixed inset-0 z-[230] flex items-center justify-center p-3 sm:p-6 bg-slate-950/95 backdrop-blur-md overflow-y-auto animate-fade-in">
+        <div class="modal-content w-full max-w-xl p-5 sm:p-7 my-auto border-2 border-amber-500/70 shadow-2xl">
+          
+          <div class="text-4xl text-center mb-2">${dilemma.image || '⚡'}</div>
+          
+          <div class="text-center">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 uppercase">
+              CRITICAL CAMPAIGN DILEMMA
+            </span>
+            <h3 class="text-lg sm:text-xl font-black text-white mt-1.5">${dilemma.title}</h3>
+            <p class="text-xs text-amber-300 font-medium mt-1 font-mono">${dilemma.headline}</p>
+            <p class="text-xs text-slate-300 mt-2.5 leading-relaxed">${dilemma.description}</p>
+          </div>
+
+          <!-- Dilemma Decision Buttons -->
+          <div class="space-y-2.5 mt-5">
+            ${dilemma.options.map((opt, i) => `
+              <button class="w-full text-left p-3.5 rounded-xl border border-slate-700 bg-slate-900/90 hover:border-amber-400 hover:bg-slate-800 transition-all text-xs btn-dilemma-opt"
+                data-opt-index="${i}">
+                <div class="font-bold text-white flex items-center justify-between">
+                  <span>${opt.text}</span>
+                  <span class="text-[10px] text-amber-400 font-mono">Select Option</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">${opt.detail}</div>
+              </button>
+            `).join('')}
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    document.querySelectorAll(".btn-dilemma-opt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.getAttribute("data-opt-index"));
+        const opt = dilemma.options[idx];
+        const player = gameState.getPlayer();
+
+        // Apply consequences
+        if (opt.effect) {
+          if (opt.effect.whiteMoney) player.whiteMoney = Math.max(0, player.whiteMoney + opt.effect.whiteMoney);
+          if (opt.effect.blackMoney) player.blackMoney = Math.max(0, player.blackMoney + opt.effect.blackMoney);
+          if (opt.effect.slushExposure) player.slushExposure = Math.max(0, Math.min(100, player.slushExposure + opt.effect.slushExposure));
+          if (opt.effect.approval) player.nationalApproval = Math.max(5, Math.min(85, player.nationalApproval + opt.effect.approval));
+          if (opt.effect.mlasLost) player.totalMlas = Math.max(5, (player.totalMlas || 24) - opt.effect.mlasLost);
+          if (opt.effect.mlaLoyalty) player.mlaLoyalty = Math.min(100, (player.mlaLoyalty || 70) + opt.effect.mlaLoyalty);
+          if (opt.effect.cadreMorale) player.cadreMorale = Math.min(100, (player.cadreMorale || 75) + opt.effect.cadreMorale);
+        }
+
+        audioEngine.playCash();
+        alert(`DECISION CONCLUDED:\n\n${opt.outcome}`);
+
+        gameState.activeDilemma = null;
+        container.innerHTML = "";
+        mapEngine.recalculateAllProjections();
+        gameState.notify("DILEMMA_RESOLVED");
+      });
+    });
   }
 
   renderElectionResultsModal() {

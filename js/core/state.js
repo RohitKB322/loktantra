@@ -36,8 +36,18 @@ class GameStateStore {
       loans: [],
       creditScore: 740,
       spokespersonCharisma: 65,
-      volunteerCount: 12000
+      volunteerCount: 12000,
+      // Internal Party Cadre & Legislative Wing (Version 0.3)
+      totalMlas: 24,
+      mlaLoyalty: 75, // 0 to 100%
+      mlaAllowancePerWeek: 1.2, // Lakhs per MLA
+      activeMembers: 18500,
+      boothWorkers: 1200,
+      cadreMorale: 78 // 0 to 100%
     };
+
+    // Active Crisis Dilemma popup
+    this.activeDilemma = null;
 
     // Parties List: Player + Clone of AI Parties
     this.parties = [

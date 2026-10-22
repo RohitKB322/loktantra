@@ -2,6 +2,7 @@
 import { gameState } from "../core/state.js";
 import { turnEngine } from "../core/turnEngine.js";
 import { startScreen } from "./startScreen.js";
+import { audioEngine } from "../engines/audioEngine.js";
 
 export const hudRenderer = {
   render() {
@@ -78,8 +79,8 @@ export const hudRenderer = {
           </div>
         </div>
 
-        <!-- Right: Seat Progress & Advance Week Button -->
-        <div class="flex items-center gap-3">
+        <!-- Right: Seat Progress & Action Buttons -->
+        <div class="flex items-center gap-2 sm:gap-3">
           <!-- Seats Gauge towards 272 -->
           <div class="hidden md:flex flex-col items-end min-w-[120px]">
             <div class="text-[10px] text-slate-300 font-bold font-mono">
@@ -90,6 +91,11 @@ export const hudRenderer = {
                 style="width: ${Math.min(100, (playerSeats / 272) * 100)}%; background-color: ${player.color};"></div>
             </div>
           </div>
+
+          <!-- Sound Mute Toggle -->
+          <button id="btn-toggle-sound" class="btn-secondary p-2 rounded-xl text-slate-400 hover:text-white" title="Toggle Sound">
+            <span id="sound-icon">${audioEngine.muted ? '🔇' : '🔊'}</span>
+          </button>
 
           <!-- Menu / Settings button -->
           <button id="btn-open-menu" class="btn-secondary p-2 rounded-xl text-slate-400 hover:text-white" title="Campaign Menu / Load Save">
@@ -126,6 +132,16 @@ export const hudRenderer = {
     if (btnMenu) {
       btnMenu.addEventListener("click", () => {
         startScreen.render();
+      });
+    }
+
+    const btnSound = document.getElementById("btn-toggle-sound");
+    if (btnSound) {
+      btnSound.addEventListener("click", () => {
+        const isMuted = audioEngine.toggleMute();
+        const icon = document.getElementById("sound-icon");
+        if (icon) icon.textContent = isMuted ? '🔇' : '🔊';
+        if (!isMuted) audioEngine.playCash();
       });
     }
   }
