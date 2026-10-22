@@ -54,6 +54,7 @@ class LoktantraApp {
       if (e.code === "Digit3") this.switchTab("finance");
       if (e.code === "Digit4") this.switchTab("media");
       if (e.code === "Digit5") this.switchTab("party-hq");
+      if (e.code === "Digit6") this.switchTab("pmo");
     });
   }
 
@@ -273,10 +274,18 @@ class LoktantraApp {
     let verdictDesc = "";
     let isVictor = false;
 
-    if (playerSeats >= majority) {
+    if (playerSeats >= 400) {
       isVictor = true;
-      verdictTitle = "ABSOLUTE HISTORIC MAJORITY!";
-      verdictDesc = `${player.name} (${player.acronym}) has decisively crossed the 272 majority line with ${playerSeats} Lok Sabha seats! The President has formally invited you to Rashtrapati Bhavan to take the oath as Prime Minister of India!`;
+      verdictTitle = "HISTORIC 400+ SEAT TSUNAMI MANDATE!";
+      verdictDesc = `${player.name} (${player.acronym}) has achieved an epoch-defining, historic landslide of ${playerSeats} Lok Sabha seats — crushing all opposition! With an untouchable supermajority exceeding two-thirds of Parliament, you have the sovereign mandate to form an absolute single-party government without any coalition compromises or allies!`;
+    } else if (playerSeats >= 362) {
+      isVictor = true;
+      verdictTitle = "TWO-THIRDS SUPERMAJORITY (362+ SEATS)!";
+      verdictDesc = `${player.name} (${player.acronym}) has swept the country with ${playerSeats} Lok Sabha seats, securing a constitutional two-thirds supermajority! You hold undisputed command over Parliament to form an independent single-party government!`;
+    } else if (playerSeats >= majority) {
+      isVictor = true;
+      verdictTitle = "ABSOLUTE SINGLE-PARTY MAJORITY!";
+      verdictDesc = `${player.name} (${player.acronym}) has decisively crossed the 272 majority line with ${playerSeats} Lok Sabha seats! The President has formally invited you to Rashtrapati Bhavan to take oath as Prime Minister heading an independent single-party government!`;
     } else if (playerSeats + tally.THIRD_FRONT >= majority) {
       verdictTitle = "COALITION GOVERNMENT MANDATE!";
       verdictDesc = `With ${playerSeats} seats won, you forge a governing alliance with regional allies to comfortably surpass 272 seats. You form the Union Cabinet as Prime Minister heading the Gathbandhan!`;
@@ -290,7 +299,7 @@ class LoktantraApp {
 
     modalContainer.innerHTML = `
       <div class="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-lg overflow-y-auto animate-fade-in">
-        <div class="modal-content w-full max-w-2xl p-6 sm:p-8 my-auto border border-amber-500/50 shadow-2xl text-center">
+        <div class="modal-content w-full max-w-2xl p-6 sm:p-8 my-auto border ${isVictor ? 'border-amber-400' : 'border-amber-500/50'} shadow-2xl text-center">
           
           <div class="text-4xl sm:text-5xl mb-2">${isVictor ? '🏆' : '🗳️'}</div>
           
@@ -332,9 +341,18 @@ class LoktantraApp {
 
           <!-- Post-Poll Action Buttons -->
           <div class="flex flex-col sm:flex-row gap-3">
-            <button id="btn-enter-resort-politics" class="flex-1 btn-primary py-3 rounded-xl font-black text-sm tracking-wide uppercase flex items-center justify-center gap-2 shadow-xl border border-amber-400">
-              <span>🏨 Enter Resort Politics & MLA Auction (3 Rounds)</span>
-            </button>
+            ${playerSeats >= majority ? `
+              <button id="btn-direct-swear-in" class="flex-1 btn-primary py-3 rounded-xl font-black text-sm tracking-wide uppercase flex items-center justify-center gap-2 shadow-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 border border-amber-300 cursor-pointer">
+                <span>🏛️ Swear In as Prime Minister (Absolute Majority) 🇮🇳</span>
+              </button>
+              <button id="btn-enter-resort-politics" class="sm:w-48 btn-secondary py-3 rounded-xl font-bold text-xs text-amber-300 border border-amber-500/40">
+                <span>🏨 MP Negotiations (Optional)</span>
+              </button>
+            ` : `
+              <button id="btn-enter-resort-politics" class="flex-1 btn-primary py-3 rounded-xl font-black text-sm tracking-wide uppercase flex items-center justify-center gap-2 shadow-xl border border-amber-400">
+                <span>🏨 Enter Resort Politics & MLA Auction (3 Rounds)</span>
+              </button>
+            `}
             <button id="btn-close-results" class="sm:w-36 btn-secondary py-3 rounded-xl font-bold text-xs text-slate-300">
               Inspect Map
             </button>
@@ -346,6 +364,25 @@ class LoktantraApp {
         </div>
       </div>
     `;
+
+    const btnDirect = document.getElementById("btn-direct-swear-in");
+    if (btnDirect) {
+      btnDirect.addEventListener("click", () => {
+        modalContainer.innerHTML = "";
+        horseTradingEngine.finalizeGovernment({
+          role: "PRIME_MINISTER",
+          allianceName: `${player.name} (Single-Party Government)`,
+          governingSeats: playerSeats,
+          allies: []
+        });
+        this.switchTab("pmo");
+        gameModal.show({
+          title: "🇮🇳 Sworn In as Prime Minister of India",
+          message: `Congratulations! In accordance with the democratic will of the people, you have taken the oath of office at Rashtrapati Bhavan as the Prime Minister of India with an independent single-party majority of ${playerSeats} Lok Sabha seats! Your term of national governance begins now.`,
+          type: "success"
+        });
+      });
+    }
 
     const btnResort = document.getElementById("btn-enter-resort-politics");
     if (btnResort) {
@@ -370,5 +407,6 @@ class LoktantraApp {
 // Bootstrap on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
   const app = new LoktantraApp();
+  window.loktantraApp = app;
   app.init();
 });

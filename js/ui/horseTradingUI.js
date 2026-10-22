@@ -443,23 +443,32 @@ export const horseTradingUI = {
     const standings = coalitionData.standings;
     const singleLargest = coalitionData.singleLargest;
     const majority = 272;
+    const playerSeats = horseTradingEngine.getState().seats.PLAYER;
+    const hasAbsoluteMajority = coalitionData.hasAbsoluteMajority || playerSeats >= majority;
+    const isSuperMajority = coalitionData.isSuperMajority || playerSeats >= 362;
+    const is400Plus = coalitionData.is400Plus || playerSeats >= 400;
+    const singleParty = coalitionData.singlePartyGovernment;
 
-    const canPlayerFormMajority = coalitionData.playerCoalitions.length > 0;
+    const canPlayerFormMajority = coalitionData.playerCoalitions && coalitionData.playerCoalitions.length > 0;
 
     container.innerHTML = `
       <div class="fixed inset-0 z-[260] flex items-center justify-center p-3 sm:p-6 bg-slate-950/95 backdrop-blur-xl overflow-y-auto animate-fade-in">
-        <div class="modal-content w-full max-w-4xl p-6 sm:p-8 my-auto border-2 border-emerald-500/70 shadow-2xl rounded-2xl relative bg-slate-900">
+        <div class="modal-content w-full max-w-4xl p-6 sm:p-8 my-auto border-2 ${hasAbsoluteMajority ? 'border-amber-500/80' : 'border-emerald-500/70'} shadow-2xl rounded-2xl relative bg-slate-900">
           
           <div class="text-center">
-            <div class="text-4xl mb-1">🏛️</div>
-            <div class="inline-block px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-              The 272 Majority Coalition Summit
+            <div class="text-4xl mb-1">${hasAbsoluteMajority ? '👑' : '🏛️'}</div>
+            <div class="inline-block px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider mb-2 ${hasAbsoluteMajority ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'}">
+              ${hasAbsoluteMajority ? (is400Plus ? '★ HISTORIC 400+ SEAT TSUNAMI MANDATE' : isSuperMajority ? '★ TWO-THIRDS SUPERMAJORITY MANDATE' : '★ ABSOLUTE SINGLE-PARTY MAJORITY') : 'The 272 Majority Coalition Summit'}
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-white">
               GOVERNMENT FORMATION AT RASHTRAPATI BHAVAN
             </h2>
             <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl mx-auto">
-              3 rounds of intense resort politics and MLA trading have concluded. The President of India invites stakeholders to demonstrate 272 letters of support!
+              ${hasAbsoluteMajority 
+                ? (is400Plus 
+                    ? 'A historic landslide! The President of India invites you to Rashtrapati Bhavan to take oath as Prime Minister heading an undisputed single-party government.' 
+                    : 'You have decisively crossed the 272 majority threshold single-handedly! The President invites you to take oath as Prime Minister heading an independent government.')
+                : '3 rounds of intense resort politics and MLA trading have concluded. The President of India invites stakeholders to demonstrate 272 letters of support!'}
             </p>
           </div>
 
@@ -477,19 +486,57 @@ export const horseTradingUI = {
           <!-- Coalition Options & Alliance Builder -->
           <div class="space-y-4">
             
-            <!-- SCENARIO 1: PLAYER CAN LEAD THE COALITION -->
-            ${canPlayerFormMajority ? `
-              <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/60">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-sm font-black text-emerald-400 uppercase tracking-wide flex items-center gap-2">
-                    <span>👑</span> Forge Your Governing Coalition (You Become Prime Minister)
-                  </h3>
-                  <span class="text-xs font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
-                    272+ Achievable
+            <!-- SCENARIO 0: SINGLE-PARTY MAJORITY GOVERNMENT (WHEN PLAYER HAS >= 272 SEATS) -->
+            ${hasAbsoluteMajority ? `
+              <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-emerald-950/60 border-2 border-amber-400 shadow-2xl">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl">👑</span>
+                    <h3 class="text-base font-black text-amber-300 uppercase tracking-wide">
+                      ${singleParty ? singleParty.name : `${player.name} Single-Party Majority Government`}
+                    </h3>
+                  </div>
+                  <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/40">
+                    ${is400Plus ? '★ 400+ SEATS MANDATE' : isSuperMajority ? '★ TWO-THIRDS MAJORITY' : '★ 272+ ABSOLUTE MAJORITY'}
                   </span>
                 </div>
-                <p class="text-xs text-slate-300 mb-3">
-                  Partner with the closest ideological or regional blocs to surpass the 272 mark and claim the Prime Minister's Office:
+
+                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4">
+                  ${singleParty ? singleParty.demands : 'You have decisively crossed the 272 mark single-handedly! You do NOT need any coalition partners, outside support, or cabinet compromises.'}
+                </p>
+
+                <div class="pt-3 border-t border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="text-xs text-amber-200/90 font-mono">
+                    <strong>Lok Sabha Strength:</strong> <span class="text-white font-bold text-sm">${playerSeats}</span> / 543 Seats (Independent Mandate)
+                  </div>
+
+                  <button type="button" class="btn-primary py-3 px-6 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider shrink-0 btn-seal-coalition shadow-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 border border-amber-300 cursor-pointer"
+                    data-alliance-name="${player.name} (Single-Party Government)"
+                    data-seats="${playerSeats}"
+                    data-role="PRIME_MINISTER"
+                    data-allies="">
+                    Form Single-Party Government as Prime Minister 🇮🇳
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- SCENARIO 1: PLAYER CAN LEAD THE COALITION (OPTIONAL IF MAJORITY, REQUIRED IF NOT) -->
+            ${canPlayerFormMajority ? `
+              <div class="p-4 rounded-xl ${hasAbsoluteMajority ? 'bg-slate-950/70 border border-slate-800' : 'bg-emerald-950/40 border border-emerald-500/60'}">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-sm font-black ${hasAbsoluteMajority ? 'text-slate-300' : 'text-emerald-400'} uppercase tracking-wide flex items-center gap-2">
+                    <span>${hasAbsoluteMajority ? '🌐' : '👑'}</span>
+                    ${hasAbsoluteMajority ? '(Optional) Invite Regional Partners for National Unity Front' : 'Forge Your Governing Coalition (You Become Prime Minister)'}
+                  </h3>
+                  <span class="text-xs font-mono ${hasAbsoluteMajority ? 'text-slate-400 bg-slate-800' : 'text-emerald-300 bg-emerald-500/20'} px-2 py-0.5 rounded border ${hasAbsoluteMajority ? 'border-slate-700' : 'border-emerald-500/30'}">
+                    ${hasAbsoluteMajority ? 'Optional Alliance' : '272+ Achievable'}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mb-3">
+                  ${hasAbsoluteMajority 
+                    ? 'You already have an absolute majority. However, you may optionally include allies to build a broad national consensus:' 
+                    : 'Partner with the closest ideological or regional blocs to surpass the 272 mark and claim the Prime Minister\'s Office:'}
                 </p>
 
                 <div class="space-y-2.5">
@@ -509,7 +556,7 @@ export const horseTradingUI = {
 
                       <button type="button" class="btn-primary py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 btn-seal-coalition"
                         data-alliance-name="${c.name}" data-seats="${c.combinedSeats}" data-role="PRIME_MINISTER" data-allies="${c.allies.join(',')}">
-                        Swear In as Prime Minister 🇮🇳
+                        ${hasAbsoluteMajority ? 'Form National Unity Front 🇮🇳' : 'Swear In as Prime Minister 🇮🇳'}
                       </button>
                     </div>
                   `).join('')}
@@ -517,8 +564,8 @@ export const horseTradingUI = {
               </div>
             ` : ''}
 
-            <!-- SCENARIO 2: RIVAL AI EXTENDS AN INVITATION TO PLAYER -->
-            ${coalitionData.rivalInviteToPlayer ? `
+            <!-- SCENARIO 2: RIVAL AI EXTENDS AN INVITATION TO PLAYER (ONLY IF PLAYER DOES NOT HAVE ABSOLUTE MAJORITY) -->
+            ${!hasAbsoluteMajority && coalitionData.rivalInviteToPlayer ? `
               <div class="p-4 rounded-xl bg-blue-950/40 border border-blue-500/60">
                 <div class="flex items-center justify-between mb-2">
                   <h3 class="text-sm font-black text-blue-400 uppercase tracking-wide flex items-center gap-2">
@@ -542,21 +589,23 @@ export const horseTradingUI = {
               </div>
             ` : ''}
 
-            <!-- SCENARIO 3: SIT AS PRINCIPAL LEADER OF OPPOSITION -->
-            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Lead the Opposition in Lok Sabha</h4>
-                  <p class="text-[11px] text-slate-400 mt-0.5">
-                    Refuse coalition compromises. Sit as the Leader of Opposition, grill the treasury benches, and launch Floor Tests!
-                  </p>
+            <!-- SCENARIO 3: SIT AS PRINCIPAL LEADER OF OPPOSITION (ONLY IF PLAYER DOES NOT HAVE ABSOLUTE MAJORITY) -->
+            ${!hasAbsoluteMajority ? `
+              <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Lead the Opposition in Lok Sabha</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5">
+                      Refuse coalition compromises. Sit as the Leader of Opposition, grill the treasury benches, and launch Floor Tests!
+                    </p>
+                  </div>
+                  <button type="button" class="btn-secondary py-2 px-4 rounded-xl text-xs font-bold text-slate-300 hover:text-white shrink-0 btn-seal-coalition"
+                    data-alliance-name="Governing Coalition" data-seats="${standings[0].seats}" data-role="OPPOSITION" data-allies="">
+                    Take Oath as Opposition Leader ⚖️
+                  </button>
                 </div>
-                <button type="button" class="btn-secondary py-2 px-4 rounded-xl text-xs font-bold text-slate-300 hover:text-white shrink-0 btn-seal-coalition"
-                  data-alliance-name="Governing Coalition" data-seats="${standings[0].seats}" data-role="OPPOSITION" data-allies="">
-                  Take Oath as Opposition Leader ⚖️
-                </button>
               </div>
-            </div>
+            ` : ''}
 
           </div>
 
@@ -570,7 +619,8 @@ export const horseTradingUI = {
         const allianceName = btn.getAttribute("data-alliance-name");
         const governingSeats = parseInt(btn.getAttribute("data-seats"));
         const role = btn.getAttribute("data-role");
-        const allies = btn.getAttribute("data-allies").split(",").filter(Boolean);
+        const alliesRaw = btn.getAttribute("data-allies");
+        const allies = alliesRaw ? alliesRaw.split(",").filter(Boolean) : [];
 
         horseTradingEngine.finalizeGovernment({
           role,
@@ -582,10 +632,19 @@ export const horseTradingUI = {
         // Close modal
         container.remove();
 
+        // Switch to PMO tab if player is Prime Minister
+        if (role === "PRIME_MINISTER" && window.loktantraApp) {
+          window.loktantraApp.switchTab("pmo");
+        }
+
+        const isSingleParty = allies.length === 0;
+
         gameModal.show({
           title: role === "PRIME_MINISTER" ? "🇮🇳 Prime Minister of India" : role === "DEPUTY_PM" ? "🏛️ Union Cabinet Sworn In" : "⚖️ Leader of the Opposition",
           message: role === "PRIME_MINISTER"
-            ? `Congratulations! You have taken the oath of office at Rashtrapati Bhavan as the Prime Minister of India heading the ${allianceName} with ${governingSeats} seats! Your first term of governance now begins.`
+            ? (isSingleParty
+                ? `Congratulations! You have taken the oath of office at Rashtrapati Bhavan as the Prime Minister of India heading an absolute single-party government (${allianceName}) with an unassailable mandate of ${governingSeats} Lok Sabha seats! Your term of national governance begins now.`
+                : `Congratulations! You have taken the oath of office at Rashtrapati Bhavan as the Prime Minister of India heading the ${allianceName} with ${governingSeats} seats! Your first term of governance now begins.`)
             : role === "DEPUTY_PM"
             ? `You have joined the Union Cabinet as Deputy Prime Minister! Managing coalition allies and national governance begins now.`
             : `You have taken your seat in Parliament as the Leader of the Opposition! Hold the government accountable and challenge them on the floor of the House.`,

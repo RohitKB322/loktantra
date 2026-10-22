@@ -28,7 +28,14 @@ export const horseTradingEngine = {
 
     gameState.gameStage = "POST_POLL";
     this.generateRivalBidForCurrentRound();
-    this.logEvent(`General Election counting concludes! Hung Parliament atmosphere: No single alliance holds an untouchable supermajority. Chartered planes activated!`);
+    const player = gameState.getPlayer();
+    if (gameState.postPoll.seats.PLAYER >= 400) {
+      this.logEvent(`HISTORIC TSUNAMI MANDATE: ${player.name} achieves 400+ Lok Sabha seats! The opposition has been decimated as single-party dominance is restored.`);
+    } else if (gameState.postPoll.seats.PLAYER >= 272) {
+      this.logEvent(`ABSOLUTE MAJORITY WON: ${player.name} commands ${gameState.postPoll.seats.PLAYER} seats single-handedly. Sovereign cabinet formation rights established.`);
+    } else {
+      this.logEvent(`General Election counting concludes! Hung Parliament atmosphere: No single alliance holds an untouchable supermajority. Chartered planes activated!`);
+    }
     
     return gameState.postPoll;
   },
@@ -362,18 +369,44 @@ export const horseTradingEngine = {
     const pp = this.getState();
     const seats = pp.seats;
     const majority = 272;
+    const player = gameState.getPlayer();
 
     // Sort parties by highest seats
     const standings = [
-      { key: "PLAYER", name: gameState.getPlayer().name + ` (${gameState.getPlayer().acronym})`, seats: seats.PLAYER, isPlayer: true },
+      { key: "PLAYER", name: player.name + ` (${player.acronym})`, seats: seats.PLAYER, isPlayer: true },
       { key: "NDA", name: "National Democratic Alliance (NDA)", seats: seats.NDA, isPlayer: false },
       { key: "INDIA", name: "I.N.D.I.A. Coalition", seats: seats.INDIA, isPlayer: false },
       { key: "OTHERS", name: "Regional Front & Independents", seats: seats.OTHERS, isPlayer: false }
     ].sort((a, b) => b.seats - a.seats);
 
     const singleLargest = standings[0];
+    const hasAbsoluteMajority = seats.PLAYER >= majority;
+    const isSuperMajority = seats.PLAYER >= 362;
+    const is400Plus = seats.PLAYER >= 400;
 
-    // Check Player's potential coalition partners
+    // Single-Party Government Option (When player has >= 272 seats single-handedly)
+    let singlePartyGovernment = null;
+    if (hasAbsoluteMajority) {
+      singlePartyGovernment = {
+        id: "PLAYER_SINGLE_PARTY",
+        name: is400Plus 
+          ? `${player.name} Historic 400+ Landslide Government` 
+          : isSuperMajority 
+          ? `${player.name} Two-Thirds Supermajority Government` 
+          : `${player.name} Absolute Single-Party Majority Government`,
+        allies: [],
+        combinedSeats: seats.PLAYER,
+        majorityReached: true,
+        demands: is400Plus 
+          ? "★ Historic 400+ seat single-party mandate! Complete executive dominance with constitutional amendment authority."
+          : isSuperMajority 
+          ? "★ Two-thirds supermajority! Full single-party authority with no coalition concessions."
+          : "★ Absolute majority won single-handedly! 100% independent cabinet with zero coalition compromises.",
+        role: "PRIME_MINISTER"
+      };
+    }
+
+    // Check Player's potential coalition partners (Only if needed or optional broad alliance)
     const playerCoalitions = [];
 
     // Option 1: Player + OTHERS
@@ -433,7 +466,7 @@ export const horseTradingEngine = {
     let rivalFormedCoalition = null;
     let rivalInviteToPlayer = null;
 
-    if (!singleLargest.isPlayer) {
+    if (!singleLargest.isPlayer && !hasAbsoluteMajority) {
       const leadAI = singleLargest.key; // "NDA" or "INDIA"
       const partnerAI = leadAI === "NDA" ? "INDIA" : "NDA";
 
@@ -463,10 +496,14 @@ export const horseTradingEngine = {
     return {
       standings,
       singleLargest,
+      singlePartyGovernment,
+      hasAbsoluteMajority,
+      isSuperMajority,
+      is400Plus,
       playerCoalitions,
       rivalFormedCoalition,
       rivalInviteToPlayer,
-      playerHasAbsoluteMajority: seats.PLAYER >= majority
+      playerHasAbsoluteMajority: hasAbsoluteMajority
     };
   },
 
