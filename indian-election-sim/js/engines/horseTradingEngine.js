@@ -517,8 +517,9 @@ export const horseTradingEngine = {
 
     // Switch game stage into GOVERNANCE
     gameState.gameStage = "GOVERNANCE";
-    // Total turns expands to 52 weeks (1-year governing cycle)
-    gameState.totalTurns = Math.max(52, gameState.currentTurn + 28);
+    // Total turns expands to recurring 54-week constitutional election cycle!
+    gameState.nextElectionTurn = gameState.currentTurn + 54;
+    gameState.totalTurns = gameState.nextElectionTurn;
 
     gameState.notify("GOVERNANCE_INITIALIZED");
     return gameState.governance;

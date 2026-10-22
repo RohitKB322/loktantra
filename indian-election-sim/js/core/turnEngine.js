@@ -6,6 +6,7 @@ import { mediaEngine } from "../engines/mediaEngine.js";
 import { mapEngine } from "../engines/mapEngine.js";
 import { cadreEngine } from "../engines/cadreEngine.js";
 import { audioEngine } from "../engines/audioEngine.js";
+import { governanceEngine } from "../engines/governanceEngine.js";
 import { RANDOM_EVENTS_POOL } from "../data/issuesAndEvents.js";
 import { DILEMMAS_POOL } from "../data/dilemmasData.js";
 import { saveManager } from "./saveManager.js";
@@ -89,6 +90,12 @@ export const turnEngine = {
           );
         }
       }
+
+      // 3. National Economic Evolution & Recurring Election Check
+      governanceEngine.processWeeklyTick();
+
+      // Recalculate Seat Projections & State Mood
+      mapEngine.recalculateAllProjections();
 
       // Auto-save and state notification
       saveManager.autoSave();

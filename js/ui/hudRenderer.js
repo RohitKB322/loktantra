@@ -54,9 +54,13 @@ export const hudRenderer = {
             </div>
             <div class="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
               ${gameState.gameStage === "GOVERNANCE" && gameState.governance ? `
-                <span class="text-amber-400 font-semibold">Term 1 • Week ${gameState.governance.termWeek}</span>
+                <span class="text-amber-400 font-semibold">Term ${gameState.termNumber || 1} • Wk ${gameState.governance.termWeek}</span>
                 <span>•</span>
-                <span class="text-emerald-400 font-bold">${gameState.governance.governingSeats}/272 Seats (${gameState.governance.stability}% Stability)</span>
+                <span class="text-emerald-400 font-bold">${gameState.governance.governingSeats}/272 Seats (${gameState.governance.stability}% Stbl)</span>
+                <span>•</span>
+                <span class="${((gameState.nextElectionTurn || 54) - gameState.currentTurn) <= 8 ? 'text-rose-400 font-bold animate-pulse' : 'text-slate-400'}">
+                  ${Math.max(0, (gameState.nextElectionTurn || 54) - gameState.currentTurn)} wks to Polls
+                </span>
               ` : gameState.gameStage === "COUNTING" || gameState.gameStage === "POST_POLL" ? `
                 <span class="text-rose-400 font-bold animate-pulse">Polls Closed • Resort Politics Active</span>
               ` : `

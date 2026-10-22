@@ -7,6 +7,7 @@ import { tab2_partyUI } from "./ui/tab2_partyUI.js";
 import { tab3_financeUI } from "./ui/tab3_financeUI.js";
 import { tab4_mediaUI } from "./ui/tab4_mediaUI.js";
 import { tab5_partyHQ } from "./ui/tab5_partyHQ.js";
+import { tab6_pmoUI } from "./ui/tab6_pmoUI.js";
 import { startScreen } from "./ui/startScreen.js";
 import { mapEngine } from "./engines/mapEngine.js";
 import { audioEngine } from "./engines/audioEngine.js";
@@ -79,6 +80,9 @@ class LoktantraApp {
       case "party-hq":
         tab5_partyHQ.render();
         break;
+      case "pmo":
+        tab6_pmoUI.render();
+        break;
     }
   }
 
@@ -110,6 +114,9 @@ class LoktantraApp {
         </button>
         <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'party-hq' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="party-hq">
           🏛️ Party HQ
+        </button>
+        <button class="desktop-nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${this.currentTab === 'pmo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-slate-400 hover:text-white'}" data-tab="pmo">
+          🇮🇳 PMO India
         </button>
       `;
 

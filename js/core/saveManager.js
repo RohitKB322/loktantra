@@ -12,6 +12,8 @@ export const saveManager = {
       timestamp: new Date().toISOString(),
       currentTurn: gameState.currentTurn,
       totalTurns: gameState.totalTurns,
+      nextElectionTurn: gameState.nextElectionTurn,
+      termNumber: gameState.termNumber,
       gameStage: gameState.gameStage,
       player: gameState.getPlayer(),
       parties: gameState.parties,
@@ -37,6 +39,8 @@ export const saveManager = {
 
       gameState.currentTurn = data.currentTurn || 1;
       gameState.totalTurns = data.totalTurns || 24;
+      gameState.nextElectionTurn = data.nextElectionTurn || 24;
+      gameState.termNumber = data.termNumber || 1;
       gameState.gameStage = data.gameStage || "CAMPAIGN";
       gameState.parties = data.parties;
       gameState.player = data.parties.find(p => p.isPlayer) || data.player;

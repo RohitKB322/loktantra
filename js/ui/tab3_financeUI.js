@@ -16,9 +16,14 @@ export const tab3_financeUI = {
     // Calculate Weekly Cashflow Breakdown
     const goldYield = Math.round(player.bonds.sovereignGold * 0.012);
     const infraYield = Math.round(player.bonds.infraBonds * 0.02);
-    const totalWeeklyIncome = goldYield + infraYield;
+    const membershipDues = Math.round((player.activeMembers || 18500) * 0.00045) + 6;
+    let pmExecutiveGrant = 0;
+    if (gameState.governance && gameState.governance.active && gameState.governance.role === "PRIME_MINISTER") {
+      pmExecutiveGrant = 30;
+    }
+    const totalWeeklyIncome = goldYield + infraYield + membershipDues + pmExecutiveGrant;
 
-    const mlaAllowanceBurn = Math.round(playerSeats * (player.mlaAllowancePerWeek || 1.2));
+    const mlaAllowanceBurn = Math.round(playerSeats * (player.mlaAllowancePerWeek || 0.2));
     
     let freebieBurn = 0;
     player.activeFreebies.forEach(fId => {
@@ -33,6 +38,10 @@ export const tab3_financeUI = {
 
     const totalWeeklyExpenses = mlaAllowanceBurn + freebieBurn + loanInterestBurn;
     const netCashflow = totalWeeklyIncome - totalWeeklyExpenses;
+
+    const trustCooldown = player.corporateTrustCooldown || 0;
+    const trustTaken = player.corporateTranchesTaken || 0;
+    const canAcceptTrust = trustCooldown === 0 && trustTaken < 4;
 
     container.innerHTML = `
       <div class="space-y-5">
@@ -68,11 +77,18 @@ export const tab3_financeUI = {
               <!-- Corporate Electoral Trust Pact -->
               <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between">
                 <div>
-                  <div class="text-xs font-bold text-white">Electoral Trust Donation</div>
-                  <div class="text-[10px] text-slate-400">Quid-pro-quo corporate funding</div>
+                  <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>Electoral Trust Donation</span>
+                    <span class="text-[9px] px-1.5 py-0.2 rounded font-mono ${trustTaken >= 4 ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-800 text-slate-400'}">
+                      Tranche ${trustTaken}/4
+                    </span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">
+                    ${trustCooldown > 0 ? `Available in ${trustCooldown} weeks` : trustTaken >= 4 ? 'Maximum corporate quota reached' : 'Quid-pro-quo corporate funding'}
+                  </div>
                 </div>
-                <button id="btn-corporate-trust" class="btn-primary text-xs px-3 py-1.5 rounded-lg">
-                  Accept ₹250L
+                <button id="btn-corporate-trust" class="btn-primary text-xs px-3 py-1.5 rounded-lg ${!canAcceptTrust ? 'opacity-50 cursor-not-allowed' : ''}" ${!canAcceptTrust ? 'disabled' : ''}>
+                  ${trustCooldown > 0 ? `Cooldown (${trustCooldown}w)` : trustTaken >= 4 ? 'Quota Full' : 'Accept ₹250L'}
                 </button>
               </div>
             </div>
@@ -82,7 +98,7 @@ export const tab3_financeUI = {
               <div>
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Black Money (Slush Cash)</span>
-                  <span class="text-xs font-mono px-2 py-0.5 rounded ${player.slushExposure > 50 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-slate-800 text-slate-400'}">
+                  <span class="text-xs font-mono px-2 py-0.5 rounded ${player.slushExposure > 50 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse' : 'bg-slate-800 text-slate-400'}">
                     ${player.slushExposure}% ED Raid Danger
                   </span>
                 </div>
@@ -118,7 +134,7 @@ export const tab3_financeUI = {
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-slate-400">
               <div class="p-1.5 bg-slate-950 rounded">
-                <div>+ Bond Yields:</div>
+                <div>+ Revenue & Dues:</div>
                 <div class="text-emerald-400 font-bold">+₹${totalWeeklyIncome}L/wk</div>
               </div>
               <div class="p-1.5 bg-slate-950 rounded">
@@ -135,6 +151,133 @@ export const tab3_financeUI = {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- SECTION 1B: SLUSH REVENUE & ED RISK REDUCTION OPERATIONS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- PANEL A: EARN BLACK MONEY (SLUSH OPERATIONS) -->
+          <div class="glass-panel p-4 flex flex-col justify-between border-t-2 border-t-amber-500">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <span>💼</span> Earn Slush Funds (Black Money)
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400">High Stakes Inflow</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">
+                Mobilize clandestine channels to replenish your party's secret cash war chests. Increases ED vigilance risk!
+              </p>
+
+              <div class="space-y-2">
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">🏗️ Highway & Metro Contractor Commission</div>
+                    <div class="text-[10px] text-slate-400">Tender kickback cut on state infrastructure contracts</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">+₹70L-₹110L Slush • +16% ED Risk</div>
+                  </div>
+                  <button id="btn-slush-tender" class="btn-primary text-xs py-1.5 px-3 rounded-lg font-bold shrink-0">
+                    Extract Cut
+                  </button>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">🏢 Builder Syndicate Rezoning Suitcase</div>
+                    <div class="text-[10px] text-slate-400">Clear greenfield commercial zoning for real estate cartels</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">+₹55L-₹85L Slush • +12% ED Risk</div>
+                  </div>
+                  <button id="btn-slush-builder" class="btn-primary text-xs py-1.5 px-3 rounded-lg font-bold shrink-0">
+                    Accept Cash
+                  </button>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">⛏️ Mining & Mineral Fleet Tribute</div>
+                    <div class="text-[10px] text-slate-400">Undeclared royalties on river sand & mineral transit</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">+₹40L-₹65L Slush • +9% ED Risk</div>
+                  </div>
+                  <button id="btn-slush-mining" class="btn-primary text-xs py-1.5 px-3 rounded-lg font-bold shrink-0">
+                    Collect Tribute
+                  </button>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">✈️ Hawala Channel Angadia Remittance</div>
+                    <div class="text-[10px] text-slate-400">Overseas trading desk cash courier deliveries</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">+₹65L-₹100L Slush • +14% ED Risk</div>
+                  </div>
+                  <button id="btn-slush-hawala" class="btn-primary text-xs py-1.5 px-3 rounded-lg font-bold shrink-0">
+                    Call Angadia
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL B: REDUCE ED / IT RAID RISK (AUDIT SCRUB) -->
+          <div class="glass-panel p-4 flex flex-col justify-between border-t-2 border-t-emerald-500">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <span>🛡️</span> Reduce ED Risk (Scrub Audit Trails)
+                </h3>
+                <span class="text-[10px] font-mono text-amber-400">Current Risk: ${player.slushExposure}%</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">
+                Deploy administrative and legal counter-measures to insulate your leadership from Enforcement Directorate raids.
+              </p>
+
+              <div class="space-y-2">
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">📜 Transfer Investigative Chief (ED/CBI)</div>
+                    <div class="text-[10px] text-slate-400">Appoint friendly director to redirect central scrutiny</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">-32% ED Risk • Cost ₹25L White</div>
+                  </div>
+                  <button id="btn-ed-director" class="btn-secondary text-xs py-1.5 px-3 rounded-lg font-bold text-emerald-300 hover:border-emerald-500 shrink-0">
+                    Transfer Chief
+                  </button>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">📂 Midnight Secretariat File Shredder</div>
+                    <div class="text-[10px] text-slate-400">Bribe records bureaucrats to misplace scrutiny dossiers</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">-22% ED Risk • Cost ₹15L Slush</div>
+                  </div>
+                  <button id="btn-ed-shred" class="btn-secondary text-xs py-1.5 px-3 rounded-lg font-bold text-amber-300 hover:border-amber-500 shrink-0">
+                    Shred Files
+                  </button>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">🌐 Offshore Mauritius Shell Audit Wipe</div>
+                    <div class="text-[10px] text-slate-400">Channel paper trails through layered international LLCs</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">-25% ED Risk • Cost ₹20L White</div>
+                  </div>
+                  <button id="btn-ed-offshore" class="btn-secondary text-xs py-1.5 px-3 rounded-lg font-bold text-blue-300 hover:border-blue-500 shrink-0">
+                    Wipe Trails
+                  </button>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-bold text-white">🛕 Religious & Charitable Trust Havens</div>
+                    <div class="text-[10px] text-slate-400">Park assets into tax-exempt welfare endowments</div>
+                    <div class="text-[10px] text-emerald-400 font-mono mt-0.5">-18% ED Risk • Cost ₹14L White</div>
+                  </div>
+                  <button id="btn-ed-trust" class="btn-secondary text-xs py-1.5 px-3 rounded-lg font-bold text-emerald-300 hover:border-emerald-500 shrink-0">
+                    Endow Trust
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- SECTION 2: REAL ESTATE MARKETPLACE & LAND PLOTS -->
@@ -298,7 +441,101 @@ export const tab3_financeUI = {
     if (btnTrust) {
       btnTrust.addEventListener("click", () => {
         const res = financeEngine.acceptCorporateTrust(250);
-        gameModal.show({ title: "Corporate Donation Received", message: res.message, type: "cash" });
+        gameModal.show({ 
+          title: res.success ? "Corporate Donation Received" : "Donation Rejected", 
+          message: res.message, 
+          type: res.success ? "cash" : "warning" 
+        });
+        this.render();
+      });
+    }
+
+    // Slush Earning Operations
+    const btnTender = document.getElementById("btn-slush-tender");
+    if (btnTender) {
+      btnTender.addEventListener("click", () => {
+        const res = financeEngine.awardInfrastructureKickback();
+        gameModal.show({ title: "Tender Commission Extracted", message: res.message, type: "cash" });
+        this.render();
+      });
+    }
+
+    const btnBuilder = document.getElementById("btn-slush-builder");
+    if (btnBuilder) {
+      btnBuilder.addEventListener("click", () => {
+        const res = financeEngine.realEstateSyndicateSuitcase();
+        gameModal.show({ title: "Builder Syndicate Cash Received", message: res.message, type: "cash" });
+        this.render();
+      });
+    }
+
+    const btnMining = document.getElementById("btn-slush-mining");
+    if (btnMining) {
+      btnMining.addEventListener("click", () => {
+        const res = financeEngine.miningSyndicateTribute();
+        gameModal.show({ title: "Mining Tribute Collected", message: res.message, type: "cash" });
+        this.render();
+      });
+    }
+
+    const btnHawala = document.getElementById("btn-slush-hawala");
+    if (btnHawala) {
+      btnHawala.addEventListener("click", () => {
+        const res = financeEngine.hawalaRemittanceInflow();
+        gameModal.show({ title: "Hawala Drop Received", message: res.message, type: "cash" });
+        this.render();
+      });
+    }
+
+    // ED Risk Scrub Operations
+    const btnEDDirector = document.getElementById("btn-ed-director");
+    if (btnEDDirector) {
+      btnEDDirector.addEventListener("click", () => {
+        const res = financeEngine.appointCompliantEDDirector();
+        gameModal.show({ 
+          title: res.success ? "Investigative Chief Replaced" : "Transfer Failed", 
+          message: res.message, 
+          type: res.success ? "success" : "warning" 
+        });
+        this.render();
+      });
+    }
+
+    const btnEDShred = document.getElementById("btn-ed-shred");
+    if (btnEDShred) {
+      btnEDShred.addEventListener("click", () => {
+        const res = financeEngine.shredAuditTrails();
+        gameModal.show({ 
+          title: res.success ? "Audit Dossiers Misplaced" : "Action Failed", 
+          message: res.message, 
+          type: res.success ? "success" : "warning" 
+        });
+        this.render();
+      });
+    }
+
+    const btnEDOffshore = document.getElementById("btn-ed-offshore");
+    if (btnEDOffshore) {
+      btnEDOffshore.addEventListener("click", () => {
+        const res = financeEngine.offshoreHawalaScrub();
+        gameModal.show({ 
+          title: res.success ? "Shell Paper Trails Scrubbed" : "Action Failed", 
+          message: res.message, 
+          type: res.success ? "success" : "warning" 
+        });
+        this.render();
+      });
+    }
+
+    const btnEDTrust = document.getElementById("btn-ed-trust");
+    if (btnEDTrust) {
+      btnEDTrust.addEventListener("click", () => {
+        const res = financeEngine.templeTrustFunnel();
+        gameModal.show({ 
+          title: res.success ? "Trust Exemption Secured" : "Action Failed", 
+          message: res.message, 
+          type: res.success ? "success" : "warning" 
+        });
         this.render();
       });
     }

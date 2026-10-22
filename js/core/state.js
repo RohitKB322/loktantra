@@ -12,7 +12,9 @@ class GameStateStore {
     // Current turn progression: Week 1 to 24 (Week 24 = General Election Counting Day)
     this.currentTurn = 1;
     this.totalTurns = 24;
-    this.gameStage = "CAMPAIGN"; // "ONBOARDING", "CAMPAIGN", "COUNTING", "POST_POLL", "GAME_OVER"
+    this.nextElectionTurn = 24; // Recurring general elections (e.g. Week 24, Week 78 / 54 wks later)
+    this.termNumber = 1;
+    this.gameStage = "CAMPAIGN"; // "ONBOARDING", "CAMPAIGN", "COUNTING", "POST_POLL", "GOVERNANCE", "GAME_OVER"
 
     // Player Party Setup
     this.player = {
@@ -37,10 +39,12 @@ class GameStateStore {
       creditScore: 740,
       spokespersonCharisma: 65,
       volunteerCount: 12000,
-      // Internal Party Cadre & Legislative Wing (Version 0.3)
+      corporateTrustCooldown: 0, // Weeks until next corporate funding tranche is allowed
+      corporateTranchesTaken: 0, // Cap on corporate tranches
+      // Internal Party Cadre & Legislative Wing (Rebalanced sustainable expenses)
       totalMlas: 24,
       mlaLoyalty: 75, // 0 to 100%
-      mlaAllowancePerWeek: 1.2, // Lakhs per MLA
+      mlaAllowancePerWeek: 0.2, // Lakhs per MLA per week (Sustainable ₹4-6L/wk instead of ₹30L+)
       activeMembers: 18500,
       boothWorkers: 1200,
       cadreMorale: 78 // 0 to 100%
@@ -126,13 +130,17 @@ class GameStateStore {
       };
     });
 
-    // Macro-Economic Indicators
+    // Macro-Economic Indicators & National Policy Dashboard
     this.macro = {
-      inflation: 5.6, // %
-      gdpGrowth: 7.2, // %
-      unemployment: 7.4, // %
+      inflation: 5.2, // % CPI Inflation
+      gdpGrowth: 7.4, // % Annualized GDP Growth
+      unemployment: 6.8, // % Unemployment Rate
+      fiscalDeficit: 5.1, // % of GDP
+      repoRate: 6.5, // % RBI Policy Repo Rate
       ecVigilance: 45, // 0-100% scale
-      sentiment: "Development & Welfare Guarantees"
+      governanceScore: 78, // Overall governance index
+      sentiment: "Economic Momentum & Welfare Delivery",
+      activePolicies: [] // [{ id, name, turnActivated, type }]
     };
 
     // Rich Breaking News Ticker Items

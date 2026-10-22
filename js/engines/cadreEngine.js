@@ -244,7 +244,7 @@ export const cadreEngine = {
     const tally = gameState.nationalSeatTally;
     // Total elected MPs / MLAs dynamically mirrors current projected seats or base
     const seatsWon = Math.max(tally ? tally.PLAYER : 0, 18);
-    const weeklyCost = Math.round(seatsWon * (player.mlaAllowancePerWeek || 1.2));
+    const weeklyCost = Math.round(seatsWon * (player.mlaAllowancePerWeek || 0.2));
 
     let mlaDefected = 0;
 
