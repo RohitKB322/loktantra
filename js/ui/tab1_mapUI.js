@@ -2,6 +2,7 @@
 import { gameState } from "../core/state.js";
 import { mapEngine } from "../engines/mapEngine.js";
 import { aiPartyEngine } from "../engines/aiPartyEngine.js";
+import { gameModal } from "./gameModal.js";
 
 export const tab1_mapUI = {
   render() {
@@ -308,9 +309,14 @@ export const tab1_mapUI = {
         const districtId = btn.getAttribute("data-district");
         const res = aiPartyEngine.launchGrandRally(stateId, districtId, false);
         if (res.success) {
+          gameModal.toast(res.message, "success");
           this.render();
         } else {
-          alert(res.message);
+          gameModal.show({
+            title: "Cannot Launch Rally",
+            message: res.message,
+            type: "danger"
+          });
         }
       });
     });

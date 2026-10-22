@@ -3,6 +3,7 @@ import { gameState } from "../core/state.js";
 import { aiPartyEngine } from "../engines/aiPartyEngine.js";
 import { FREEBIE_SCHEMES_CATALOG } from "../data/issuesAndEvents.js";
 import { SYMBOLS_SVG } from "../data/initialParties.js";
+import { gameModal } from "./gameModal.js";
 
 export const tab2_partyUI = {
   render() {
@@ -268,8 +269,12 @@ export const tab2_partyUI = {
     if (btnRallyWhite) {
       btnRallyWhite.addEventListener("click", () => {
         const res = aiPartyEngine.launchGrandRally(gameState.selectedStateId, gameState.selectedDistrictId, false);
-        if (res.success) this.render();
-        else alert(res.message);
+        if (res.success) {
+          gameModal.show({ title: "Grand Mega-Rally Launched!", message: res.message, type: "success" });
+          this.render();
+        } else {
+          gameModal.show({ title: "Rally Denied", message: res.message, type: "danger" });
+        }
       });
     }
 
@@ -277,8 +282,12 @@ export const tab2_partyUI = {
     if (btnRallySlush) {
       btnRallySlush.addEventListener("click", () => {
         const res = aiPartyEngine.launchGrandRally(gameState.selectedStateId, gameState.selectedDistrictId, true);
-        if (res.success) this.render();
-        else alert(res.message);
+        if (res.success) {
+          gameModal.show({ title: "Clandestine Mega-Rally Launched!", message: res.message, type: "cash" });
+          this.render();
+        } else {
+          gameModal.show({ title: "Slush Insufficient", message: res.message, type: "danger" });
+        }
       });
     }
 
@@ -286,8 +295,12 @@ export const tab2_partyUI = {
     if (btnDoor) {
       btnDoor.addEventListener("click", () => {
         const res = aiPartyEngine.launchDoorToDoor(gameState.selectedStateId, gameState.selectedDistrictId);
-        if (res.success) this.render();
-        else alert(res.message);
+        if (res.success) {
+          gameModal.show({ title: "Padyatra Mobilized!", message: res.message, type: "success" });
+          this.render();
+        } else {
+          gameModal.show({ title: "Cannot Launch Padyatra", message: res.message, type: "danger" });
+        }
       });
     }
 
@@ -295,8 +308,12 @@ export const tab2_partyUI = {
     if (btnIT) {
       btnIT.addEventListener("click", () => {
         const res = aiPartyEngine.launchITCellBlitz(gameState.selectedStateId);
-        if (res.success) this.render();
-        else alert(res.message);
+        if (res.success) {
+          gameModal.show({ title: "IT Cell Digital Blitz Online!", message: res.message, type: "info" });
+          this.render();
+        } else {
+          gameModal.show({ title: "IT Cell Insufficient Funds", message: res.message, type: "danger" });
+        }
       });
     }
 
@@ -304,8 +321,12 @@ export const tab2_partyUI = {
     if (btnPoach) {
       btnPoach.addEventListener("click", () => {
         const res = aiPartyEngine.poachRivalCandidate("BVP", gameState.selectedStateId);
-        if (res.success) this.render();
-        else alert(res.message);
+        if (res.success) {
+          gameModal.show({ title: "Resort Politics: Heavyweight Poached!", message: res.message, type: "cash" });
+          this.render();
+        } else {
+          gameModal.show({ title: "Poaching Operation Failed", message: res.message, type: "danger" });
+        }
       });
     }
 
@@ -314,8 +335,12 @@ export const tab2_partyUI = {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-scheme-id");
         const res = aiPartyEngine.announceFreebieScheme(id);
-        if (res.success) this.render();
-        else alert(res.message);
+        if (res.success) {
+          gameModal.show({ title: "Manifesto Promise Declared!", message: res.message, type: "success" });
+          this.render();
+        } else {
+          gameModal.show({ title: "Scheme Already Promised", message: res.message, type: "warning" });
+        }
       });
     });
 
@@ -324,7 +349,11 @@ export const tab2_partyUI = {
       btn.addEventListener("click", () => {
         const partyId = btn.getAttribute("data-party-id");
         const res = aiPartyEngine.negotiateAlliance(partyId);
-        alert(res.message);
+        gameModal.show({
+          title: res.success ? "Alliance Sealed!" : "Alliance Rejected",
+          message: res.message,
+          type: res.success ? "success" : "warning"
+        });
         this.render();
       });
     });

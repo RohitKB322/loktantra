@@ -3,6 +3,7 @@ import { gameState } from "../core/state.js";
 import { saveManager } from "../core/saveManager.js";
 import { SYMBOLS_SVG, PLAYER_STARTING_PRESETS } from "../data/initialParties.js";
 import { mapEngine } from "../engines/mapEngine.js";
+import { gameModal } from "./gameModal.js";
 
 export const startScreen = {
   selectedColor: "#ff9933",
@@ -320,7 +321,7 @@ export const startScreen = {
       btnAuto.addEventListener("click", () => {
         const res = saveManager.loadAutoSave();
         if (res.success) this.closeModal();
-        else alert(res.error || "Failed to load autosave");
+        else gameModal.toast(res.error || "Failed to load autosave", "danger");
       });
     }
 
@@ -330,7 +331,7 @@ export const startScreen = {
         const slot = parseInt(btn.getAttribute("data-slot"));
         const res = saveManager.loadFromSlot(slot);
         if (res.success) this.closeModal();
-        else alert(res.error || "Failed to load slot");
+        else gameModal.toast(res.error || "Failed to load slot", "danger");
       });
     });
 
@@ -340,7 +341,7 @@ export const startScreen = {
         const slot = parseInt(btn.getAttribute("data-slot"));
         const res = saveManager.saveToSlot(slot);
         if (res.success) {
-          alert(`Saved campaign to Slot ${slot}!`);
+          gameModal.toast(`Campaign successfully saved to Slot ${slot}!`, "success");
           this.render(); // refresh metadata
         }
       });
@@ -359,7 +360,7 @@ export const startScreen = {
         if (e.target.files && e.target.files[0]) {
           const res = await saveManager.importSaveFromFile(e.target.files[0]);
           if (res.success) this.closeModal();
-          else alert(res.error || "Invalid save file");
+          else gameModal.toast(res.error || "Invalid save file", "danger");
         }
       });
     }

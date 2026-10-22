@@ -10,6 +10,7 @@ import { tab5_partyHQ } from "./ui/tab5_partyHQ.js";
 import { startScreen } from "./ui/startScreen.js";
 import { mapEngine } from "./engines/mapEngine.js";
 import { audioEngine } from "./engines/audioEngine.js";
+import { gameModal } from "./ui/gameModal.js";
 
 class LoktantraApp {
   constructor() {
@@ -230,12 +231,16 @@ class LoktantraApp {
         }
 
         audioEngine.playCash();
-        alert(`DECISION CONCLUDED:\n\n${opt.outcome}`);
-
         gameState.activeDilemma = null;
         container.innerHTML = "";
         mapEngine.recalculateAllProjections();
         gameState.notify("DILEMMA_RESOLVED");
+
+        gameModal.show({
+          title: "Decision Concluded",
+          message: opt.outcome,
+          type: "info"
+        });
       });
     });
   }

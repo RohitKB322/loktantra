@@ -1,27 +1,31 @@
-// Autonomous AI Behavior, Campaign Actions, Alliances & Resort Politics (Version 0.2)
+// Autonomous AI Behavior, Campaign Actions, Alliances & Resort Politics (Version 0.4)
 import { gameState } from "../core/state.js";
 import { FREEBIE_SCHEMES_CATALOG } from "../data/issuesAndEvents.js";
 import { mapEngine } from "./mapEngine.js";
+import { cadreEngine } from "./cadreEngine.js";
 
 export const aiPartyEngine = {
   // Player Campaign Action 1: Grand Mega-Rally
   launchGrandRally(stateId, districtId, useSlush = false) {
     const player = gameState.getPlayer();
-    const whiteCost = 45; // Lakhs
+    const discount = cadreEngine.getVolunteerDiscount();
+    const whiteCost = Math.round(45 * (1 - discount)); // Volunteer crowd discount
     const slushCost = 65;
+    const turnoutBonus = cadreEngine.getBoothTurnoutBonus();
 
     if (useSlush) {
-      if (player.blackMoney < slushCost) return { success: false, message: "Insufficient Slush Funds (₹65L required)" };
+      if (player.blackMoney < slushCost) return { success: false, message: `Insufficient Slush Funds. Need ₹${slushCost}L cash.` };
       player.blackMoney -= slushCost;
       player.slushExposure = Math.min(100, player.slushExposure + 10);
     } else {
-      if (player.whiteMoney < whiteCost) return { success: false, message: "Insufficient White Money (₹45L required)" };
+      if (player.whiteMoney < whiteCost) return { success: false, message: `Insufficient White Money. Need ₹${whiteCost}L (Discount applied: ${Math.round(discount * 100)}%).` };
       player.whiteMoney -= whiteCost;
     }
 
-    // 1. Permanent ground shift in target district & state spillover
-    gameState.applyPersistentVoteShift(stateId, districtId, 4.5);
-    gameState.applyPersistentVoteShift(stateId, null, 1.5);
+    // 1. Permanent ground shift in target district & state spillover (enhanced by Panna Pramukhs!)
+    const targetBoost = Math.round((4.5 + (turnoutBonus * 0.4)) * 10) / 10;
+    gameState.applyPersistentVoteShift(stateId, districtId, targetBoost);
+    gameState.applyPersistentVoteShift(stateId, null, 1.6);
 
     // 2. Active visual radar marker for 3 weeks
     gameState.addRally(stateId, districtId, player.id, "grand_rally", 3);
@@ -37,18 +41,24 @@ export const aiPartyEngine = {
 
     mapEngine.recalculateAllProjections();
     gameState.notify("CAMPAIGN_UPDATED");
-    return { success: true, message: `Grand Rally held in ${d ? d.name : stateId}! Permanent +4.5% boost secured with active momentum.` };
+    return { 
+      success: true, 
+      message: `Grand Rally held in ${d ? d.name : stateId}!\n\n• Permanent Vote Gain: +${targetBoost}%\n• Volunteer Discount Applied: ${Math.round(discount * 100)}% (Saved ₹${45 - whiteCost}L)\n• Active 3-Week Momentum Engaged.` 
+    };
   },
 
   // Player Campaign Action 2: Grassroots Door-to-Door & Padyatra
   launchDoorToDoor(stateId, districtId) {
     const player = gameState.getPlayer();
-    const cost = 15; // Lakhs
-    if (player.whiteMoney < cost) return { success: false, message: "Insufficient White Money (₹15L required)" };
+    const discount = cadreEngine.getVolunteerDiscount();
+    const cost = Math.round(15 * (1 - discount));
+    const turnoutBonus = cadreEngine.getBoothTurnoutBonus();
+
+    if (player.whiteMoney < cost) return { success: false, message: `Insufficient White Money. Need ₹${cost}L.` };
 
     player.whiteMoney -= cost;
-    // Permanent vote shift
-    gameState.applyPersistentVoteShift(stateId, districtId, 3.2);
+    const boost = Math.round((3.2 + (turnoutBonus * 0.3)) * 10) / 10;
+    gameState.applyPersistentVoteShift(stateId, districtId, boost);
 
     gameState.addRally(stateId, districtId, player.id, "door_to_door", 2);
 
@@ -62,7 +72,10 @@ export const aiPartyEngine = {
 
     mapEngine.recalculateAllProjections();
     gameState.notify("CAMPAIGN_UPDATED");
-    return { success: true, message: `Door-to-Door padyatra concluded in ${d ? d.name : stateId}. Permanent +3.2% grassroots foundation built.` };
+    return { 
+      success: true, 
+      message: `Door-to-Door padyatra concluded in ${d ? d.name : stateId}!\n\n• Permanent Grassroots Gain: +${boost}%\n• Panna Pramukh Turnout Bonus Active.` 
+    };
   },
 
   // Player Campaign Action 3: IT Cell & Social Media Blitz

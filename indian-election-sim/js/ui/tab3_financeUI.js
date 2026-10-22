@@ -1,6 +1,8 @@
-// TAB 3: Financials, Dual-Ledger, Banking, Real Estate & Investments
+// TAB 3: Financials, Dual-Ledger, Cashflow Statement & Real Estate (Version 0.4)
 import { gameState } from "../core/state.js";
 import { financeEngine, REAL_ESTATE_MARKET } from "../engines/financeEngine.js";
+import { FREEBIE_SCHEMES_CATALOG } from "../data/issuesAndEvents.js";
+import { gameModal } from "./gameModal.js";
 
 export const tab3_financeUI = {
   render() {
@@ -8,16 +10,39 @@ export const tab3_financeUI = {
     if (!container) return;
 
     const player = gameState.getPlayer();
+    const tally = gameState.nationalSeatTally;
+    const playerSeats = tally ? tally.PLAYER : 18;
+
+    // Calculate Weekly Cashflow Breakdown
+    const goldYield = Math.round(player.bonds.sovereignGold * 0.012);
+    const infraYield = Math.round(player.bonds.infraBonds * 0.02);
+    const totalWeeklyIncome = goldYield + infraYield;
+
+    const mlaAllowanceBurn = Math.round(playerSeats * (player.mlaAllowancePerWeek || 1.2));
+    
+    let freebieBurn = 0;
+    player.activeFreebies.forEach(fId => {
+      const scheme = FREEBIE_SCHEMES_CATALOG.find(s => s.id === fId);
+      if (scheme) freebieBurn += scheme.costPerWeek;
+    });
+
+    let loanInterestBurn = 0;
+    player.loans.forEach(l => {
+      loanInterestBurn += (l.weeklyInterest || 0);
+    });
+
+    const totalWeeklyExpenses = mlaAllowanceBurn + freebieBurn + loanInterestBurn;
+    const netCashflow = totalWeeklyIncome - totalWeeklyExpenses;
 
     container.innerHTML = `
       <div class="space-y-5">
         
-        <!-- SECTION 1: DUAL-LEDGER TREASURY OVERVIEW -->
+        <!-- SECTION 1: DUAL-LEDGER TREASURY & WEEKLY CASHFLOW -->
         <div class="glass-panel p-4">
           <div class="flex items-center justify-between mb-3">
             <div>
-              <h2 class="text-sm font-black uppercase tracking-wider text-white">Party Treasury & Dual Ledger</h2>
-              <p class="text-xs text-slate-400">Balance lawful campaign finance against clandestine dark money.</p>
+              <h2 class="text-sm font-black uppercase tracking-wider text-white">Party Treasury & Cashflow Statement</h2>
+              <p class="text-xs text-slate-400">Balance declared official funds against clandestine slush cash.</p>
             </div>
             <div class="text-xs font-mono text-slate-400">
               EC Vigilance Index: <b class="text-amber-400">${gameState.macro.ecVigilance}%</b>
@@ -36,7 +61,7 @@ export const tab3_financeUI = {
                   ₹${player.whiteMoney} <span class="text-xs font-normal text-slate-400">Lakhs</span>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-1">
-                  Legitimate declared funds. Used for public mega-rallies, legal television advertisement slots, and printing manifestos.
+                  Declared legitimate treasury. Used for public mega-rallies, legal TV ads, volunteer fuel, and manifesto printing.
                 </p>
               </div>
 
@@ -65,7 +90,7 @@ export const tab3_financeUI = {
                   ₹${player.blackMoney} <span class="text-xs font-normal text-slate-400">Lakhs</span>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-1">
-                  Unaccounted suitcase cash. Used for envelope journalism bribes, cash-for-votes, and poaching rival MLAs.
+                  Unaccounted suitcase cash. Used for envelope journalism bribes, secret MLA briefcases, and poaching rival heavyweights.
                 </p>
               </div>
 
@@ -81,14 +106,43 @@ export const tab3_financeUI = {
               </div>
             </div>
           </div>
+
+          <!-- Weekly Cashflow Statement Bar -->
+          <div class="mt-4 p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-slate-300 uppercase tracking-wider text-[11px]">Weekly Treasury Cashflow Audit</span>
+              <span class="font-bold ${netCashflow >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                Net: ${netCashflow >= 0 ? '+' : ''}₹${netCashflow}L / week
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-slate-400">
+              <div class="p-1.5 bg-slate-950 rounded">
+                <div>+ Bond Yields:</div>
+                <div class="text-emerald-400 font-bold">+₹${totalWeeklyIncome}L/wk</div>
+              </div>
+              <div class="p-1.5 bg-slate-950 rounded">
+                <div>- Legislator Allowances:</div>
+                <div class="text-rose-400 font-bold">-₹${mlaAllowanceBurn}L/wk</div>
+              </div>
+              <div class="p-1.5 bg-slate-950 rounded">
+                <div>- Freebie Subsidies:</div>
+                <div class="text-rose-400 font-bold">-₹${freebieBurn}L/wk</div>
+              </div>
+              <div class="p-1.5 bg-slate-950 rounded">
+                <div>- Loan Servicing:</div>
+                <div class="text-rose-400 font-bold">-₹${loanInterestBurn}L/wk</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- SECTION 2: REAL ESTATE MARKETPLACE & LAND PLOTS -->
         <div class="glass-panel p-4">
           <div class="flex items-center justify-between mb-3">
             <div>
-              <h2 class="text-sm font-black uppercase tracking-wider text-white">Real Estate & Land Landbank</h2>
-              <p class="text-xs text-slate-400">Acquire prime land plots across India. Real estate appreciates weekly based on economic momentum.</p>
+              <h2 class="text-sm font-black uppercase tracking-wider text-white">Real Estate & Landbank</h2>
+              <p class="text-xs text-slate-400">Acquire prime land plots across India. Plots fluctuate weekly based on GDP growth and infrastructure announcements.</p>
             </div>
             <span class="text-xs font-mono text-emerald-400 font-bold">
               Owned Plots: ${player.properties.length}
@@ -244,7 +298,7 @@ export const tab3_financeUI = {
     if (btnTrust) {
       btnTrust.addEventListener("click", () => {
         const res = financeEngine.acceptCorporateTrust(250);
-        alert(res.message);
+        gameModal.show({ title: "Corporate Donation Received", message: res.message, type: "cash" });
         this.render();
       });
     }
@@ -254,8 +308,12 @@ export const tab3_financeUI = {
     if (btnLaunder) {
       btnLaunder.addEventListener("click", () => {
         const res = financeEngine.launderSlush(100);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({ 
+          title: res.success ? "Hawala Laundering Concluded" : "Laundering Failed", 
+          message: res.message, 
+          type: res.success ? "cash" : "danger" 
+        });
+        this.render();
       });
     }
 
@@ -264,8 +322,12 @@ export const tab3_financeUI = {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-plot-id");
         const res = financeEngine.buyPlot(id, false);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({
+          title: res.success ? "Plot Acquired" : "Transaction Failed",
+          message: res.message,
+          type: res.success ? "success" : "danger"
+        });
+        this.render();
       });
     });
 
@@ -274,8 +336,12 @@ export const tab3_financeUI = {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-plot-id");
         const res = financeEngine.buyPlot(id, true);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({
+          title: res.success ? "Benami Land Purchased" : "Transaction Failed",
+          message: res.message,
+          type: res.success ? "cash" : "danger"
+        });
+        this.render();
       });
     });
 
@@ -284,8 +350,8 @@ export const tab3_financeUI = {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.getAttribute("data-prop-index"));
         const res = financeEngine.sellPlot(idx, "white");
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({ title: "Property Liquidated", message: res.message, type: "cash" });
+        this.render();
       });
     });
 
@@ -294,8 +360,8 @@ export const tab3_financeUI = {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.getAttribute("data-prop-index"));
         const res = financeEngine.sellPlot(idx, "slush");
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({ title: "Property Sold for Cash", message: res.message, type: "cash" });
+        this.render();
       });
     });
 
@@ -304,8 +370,12 @@ export const tab3_financeUI = {
       btn.addEventListener("click", () => {
         const amt = parseInt(btn.getAttribute("data-amount"));
         const res = financeEngine.takeLoan(amt);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({
+          title: res.success ? "Commercial Loan Disbursed" : "Loan Rejected",
+          message: res.message,
+          type: res.success ? "cash" : "danger"
+        });
+        this.render();
       });
     });
 
@@ -314,8 +384,12 @@ export const tab3_financeUI = {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.getAttribute("data-loan-index"));
         const res = financeEngine.repayLoan(idx);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({
+          title: res.success ? "Loan Repaid" : "Repayment Failed",
+          message: res.message,
+          type: res.success ? "success" : "danger"
+        });
+        this.render();
       });
     });
 
@@ -324,8 +398,12 @@ export const tab3_financeUI = {
     if (btnGold) {
       btnGold.addEventListener("click", () => {
         const res = financeEngine.investBonds("sovereignGold", 50);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({
+          title: res.success ? "Bonds Purchased" : "Order Failed",
+          message: res.message,
+          type: res.success ? "success" : "danger"
+        });
+        this.render();
       });
     }
 
@@ -333,8 +411,12 @@ export const tab3_financeUI = {
     if (btnInfra) {
       btnInfra.addEventListener("click", () => {
         const res = financeEngine.investBonds("infraBonds", 50);
-        if (res.success) this.render();
-        else alert(res.message);
+        gameModal.show({
+          title: res.success ? "Infra Bonds Purchased" : "Order Failed",
+          message: res.message,
+          type: res.success ? "success" : "danger"
+        });
+        this.render();
       });
     }
   }

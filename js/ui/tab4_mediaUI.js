@@ -2,6 +2,7 @@
 import { gameState } from "../core/state.js";
 import { mediaEngine, NEWS_CHANNELS } from "../engines/mediaEngine.js";
 import { audioEngine } from "../engines/audioEngine.js";
+import { gameModal } from "./gameModal.js";
 
 // Illustrated Anchor Profiles with Caricatures & Flavor Quotes
 const ANCHOR_PROFILES = {
@@ -348,11 +349,19 @@ export const tab4_mediaUI = {
           audioEngine.playFanfare();
           player.nationalApproval = Math.min(85, player.nationalApproval + opt.approvalGain);
           player.spokespersonCharisma = Math.min(95, (player.spokespersonCharisma || 60) + 4);
-          alert(`🏆 DEBATE VICTORY!\n\nYour spokesperson silenced the panel with thunderous applause! National approval jumped by +${opt.approvalGain}%.`);
+          gameModal.show({
+            title: "🏆 DEBATE VICTORY!",
+            message: `Your spokesperson silenced the panel with thunderous applause! National approval jumped by +${opt.approvalGain}%. Spokesperson Charisma rose to ${player.spokespersonCharisma}.`,
+            type: "success"
+          });
         } else {
           audioEngine.playDebateBell();
           player.nationalApproval = Math.max(5, player.nationalApproval - 1.5);
-          alert(`⚠️ SHOUTING OVERWHELMED!\n\nThe panel ganged up and drowned out your mic with aggressive interruptions. Approval slipped by -1.5%.`);
+          gameModal.show({
+            title: "⚠️ SHOUTING OVERWHELMED!",
+            message: `The panel ganged up and drowned out your mic with aggressive interruptions. Approval slipped by -1.5%.`,
+            type: "warning"
+          });
         }
 
         this.activeDebate = null;
@@ -373,9 +382,12 @@ export const tab4_mediaUI = {
     const btnAds = document.getElementById("btn-buy-channel-ads");
     if (btnAds) {
       btnAds.addEventListener("click", () => {
-        audioEngine.playCash();
         const res = mediaEngine.buyAdCampaign(this.currentChannelId, 2);
-        alert(res.message);
+        gameModal.show({
+          title: res.success ? "📺 Campaign Blitz Launched" : "⚠️ Ad Purchase Failed",
+          message: res.message,
+          type: res.success ? "cash" : "warning"
+        });
         this.render();
       });
     }
@@ -384,11 +396,21 @@ export const tab4_mediaUI = {
     const btnBribe = document.getElementById("btn-envelope-bribe");
     if (btnBribe) {
       btnBribe.addEventListener("click", () => {
-        const choice = confirm("Spend ₹60L Slush Cash for Envelope Journalism?\n\nOK = Plant damaging leak on rival opposition.\nCancel = Suppress pending scandals.");
-        const action = choice ? "plant_rival_scandal" : "suppress_scandal";
-        const res = mediaEngine.attemptCovertPRBribe(this.currentChannelId, action);
-        alert(res.message);
-        this.render();
+        gameModal.confirm({
+          title: "Envelope Journalism (Covert PR)",
+          message: "Spend ₹60L Slush Cash to covertly manipulate prime-time broadcasts?\n\nProceed to plant a damaging leak on rival opposition, or cancel to keep your war chest intact.",
+          confirmText: "🎯 Plant Rival Leak",
+          cancelText: "Keep Cash",
+          onConfirm: () => {
+            const res = mediaEngine.attemptCovertPRBribe(this.currentChannelId, "plant_rival_scandal");
+            gameModal.show({
+              title: res.success ? "💼 Covert Op Successful" : "🚨 Whistleblower Alert!",
+              message: res.message,
+              type: res.success ? "danger" : "warning"
+            });
+            this.render();
+          }
+        });
       });
     }
   }
